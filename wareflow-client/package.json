@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@userfront/toolkit": "^1.0.10",
     "axios": "^1.7.9",
     "cra-template": "1.2.0",
     "react": "^19.0.0",

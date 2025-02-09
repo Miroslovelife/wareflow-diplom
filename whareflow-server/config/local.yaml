@@ -1,0 +1,21 @@
+env: "local" #local, dev, prod
+
+storage_path:
+  postgres:
+    password: "clown1488"
+    host: "localhost"
+    port: "5432"
+    database: "ware_flow"
+
+http_server:
+  address: "localhost:8087"
+  timeout: 4s
+  iddle_timeout: 60s
+
+auth:
+  pass_salt: "qwerty"
+  access_token_expiry_hour: 2
+  refresh_token_expiry_hour: 120
+  access_token_secret: "qwerty"
+  refresh_token_secret: "qwerty"
+

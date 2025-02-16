@@ -1,0 +1,366 @@
+basePath: /v1
+definitions:
+  delivery.UserLoginByEmail:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  delivery.UserLoginByPhoneNumber:
+    properties:
+      password:
+        type: string
+      phone_number:
+        type: string
+    type: object
+  delivery.UserRefreshTokens:
+    properties:
+      refresh_token:
+        type: string
+    type: object
+  delivery.UserReg:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      password:
+        type: string
+      phone_number:
+        type: string
+      surname:
+        type: string
+      username:
+        type: string
+    type: object
+  delivery.WarehouseModelRequest:
+    properties:
+      address:
+        type: string
+      name:
+        type: string
+    type: object
+host: localhost:8089
+info:
+  contact: {}
+  title: WareFlow api
+  version: "1.0"
+paths:
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Регистрирует нового пользователя
+      parameters:
+      - description: ww
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/delivery.UserRefreshTokens'
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: 'error: invalid request body'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: 'error: internal server error'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Обновление пары токенов
+      tags:
+      - auth
+  /auth/sign-in-email:
+    post:
+      consumes:
+      - application/json
+      description: Регистрирует нового пользователя
+      parameters:
+      - description: Данные для авторизации
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/delivery.UserLoginByEmail'
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: 'error: invalid request body'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: 'error: internal server error'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Авторизация по почте
+      tags:
+      - auth
+  /auth/sign-in-phone:
+    post:
+      consumes:
+      - application/json
+      description: Регистрирует нового пользователя
+      parameters:
+      - description: Данные для авторизации
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/delivery.UserLoginByPhoneNumber'
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: 'error: invalid request body'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: 'error: internal server error'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Авторизация по номеру телефона
+      tags:
+      - auth
+  /auth/sign-up:
+    post:
+      consumes:
+      - application/json
+      description: Регистрирует нового пользователя
+      parameters:
+      - description: Данные для регистрации
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/delivery.UserReg'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'message: user registered successfully'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: 'error: invalid request body'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: 'error: internal server error'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Регистрация пользователя
+      tags:
+      - auth
+  /warehouse:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает список всех складов пользователя
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'message: warehouse success created'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: 'error: invalid request body'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: 'error: internal server error'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Return warehouses list
+      tags:
+      - warehouse
+    post:
+      consumes:
+      - application/json
+      description: Создает новый склад
+      parameters:
+      - description: Данные для создания склада
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/delivery.WarehouseModelRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'message: warehouse success created'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: 'error: invalid request body'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: 'error: internal server error'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Создание склада
+      tags:
+      - warehouse
+  /warehouse/{name}:
+    delete:
+      consumes:
+      - application/json
+      description: Возвращает список всех складов пользователя
+      parameters:
+      - description: warehouse name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'message: warehouse success delete'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: 'error: invalid request body'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: 'error: internal server error'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete warehouse by name
+      tags:
+      - warehouse
+    get:
+      consumes:
+      - application/json
+      description: Возвращает список всех складов пользователя
+      parameters:
+      - description: warehouse name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'message: warehouse success created'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: 'error: invalid request body'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: 'error: internal server error'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Return warehouses list
+      tags:
+      - warehouse
+    put:
+      consumes:
+      - application/json
+      description: Создает новый склад
+      parameters:
+      - description: warehouse name
+        in: path
+        name: name
+        required: true
+        type: string
+      - description: Данные для обновления склада
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/delivery.WarehouseModelRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'message: warehouse success updated'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: 'error: invalid request body'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: 'error: internal server error'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Создание склада
+      tags:
+      - warehouse
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

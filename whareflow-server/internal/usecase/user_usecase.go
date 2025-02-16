@@ -3,14 +3,16 @@ package usecase
 import (
 	"github.com/Miroslovelife/whareflow/internal/deliviry/http/v1/model"
 	"github.com/Miroslovelife/whareflow/internal/domain"
+	"github.com/Miroslovelife/whareflow/internal/errors"
 	"github.com/Miroslovelife/whareflow/internal/repositories"
 	"github.com/Miroslovelife/whareflow/internal/services"
 )
 
 type UserUsecase interface {
-	Register(in *http.UserReg) error
-	LoginByEmail(in *http.UserLoginByEmail, secretAccess string, secretRefresh string, expiry uint8) (string, string, error)
-	LoginByPhoneNumber(in *http.UserLoginByPhoneNumber, secretAccess string, secretRefresh string, expiry uint8) (string, string, error)
+	Register(in *delivery.UserReg) error
+	LoginByEmail(in *delivery.UserLoginByEmail, secretAccess string, secretRefresh string, expiry uint8) (string, string, error)
+	LoginByPhoneNumber(in *delivery.UserLoginByPhoneNumber, secretAccess string, secretRefresh string, expiry uint8) (string, string, error)
+	Refresh(refreshToken, secretAccess, secretRefresh string, expAccess, expRefresh uint8) (string, string, error)
 }
 
 type userUsecaseImpl struct {
@@ -27,7 +29,7 @@ func NewUserUsecase(userRepository repositories.UserRepository, passwordHasher s
 	}
 }
 
-func (us *userUsecaseImpl) Register(in *http.UserReg) error {
+func (us *userUsecaseImpl) Register(in *delivery.UserReg) error {
 
 	hashedPassword := us.passwordHasher.Hash(in.Password)
 
@@ -49,7 +51,7 @@ func (us *userUsecaseImpl) Register(in *http.UserReg) error {
 	return nil
 }
 
-func (us *userUsecaseImpl) LoginByEmail(in *http.UserLoginByEmail, secretAccess string, secretRefresh string, expiry uint8) (string, string, error) {
+func (us *userUsecaseImpl) LoginByEmail(in *delivery.UserLoginByEmail, secretAccess string, secretRefresh string, expiry uint8) (string, string, error) {
 	hashedPassword := us.passwordHasher.Hash(in.Password)
 
 	loginData := map[string]interface{}{
@@ -85,7 +87,7 @@ func (us *userUsecaseImpl) LoginByEmail(in *http.UserLoginByEmail, secretAccess 
 
 }
 
-func (us *userUsecaseImpl) LoginByPhoneNumber(in *http.UserLoginByPhoneNumber, secretAccess string, secretRefresh string, expiry uint8) (string, string, error) {
+func (us *userUsecaseImpl) LoginByPhoneNumber(in *delivery.UserLoginByPhoneNumber, secretAccess string, secretRefresh string, expiry uint8) (string, string, error) {
 	hashedPassword := us.passwordHasher.Hash(in.Password)
 
 	loginData := map[string]interface{}{
@@ -118,4 +120,33 @@ func (us *userUsecaseImpl) LoginByPhoneNumber(in *http.UserLoginByPhoneNumber, s
 	}
 
 	return accessToken, refreshToken, nil
+}
+
+func (us *userUsecaseImpl) Refresh(refreshToken, secretAccess, secretRefresh string, expAccess, expRefresh uint8) (string, string, error) {
+	if auth, err := us.tokenManager.IsAuthorized(refreshToken, secretRefresh); !auth {
+		return "", "", errors.ErrTokenIsNotValid
+	} else if err != nil {
+		return "", "", err
+	}
+
+	userId, err := us.tokenManager.ExtractUuidFromToken(refreshToken, secretRefresh)
+	if err != nil {
+		return "", "", err
+	}
+
+	claims := map[string]interface{}{
+		"uuid": userId,
+	}
+
+	newAccessToken, err := us.tokenManager.CreateToken(secretAccess, expAccess, claims)
+	if err != nil {
+		return "", "", err
+	}
+
+	newRefreshToken, err := us.tokenManager.CreateToken(secretRefresh, expRefresh, claims)
+	if err != nil {
+		return "", "", err
+	}
+
+	return newAccessToken, newRefreshToken, nil
 }

@@ -1,4 +1,4 @@
-package http
+package delivery
 
 type JWTCustomClaims struct {
 	Uuid []byte `json:"uuid"`

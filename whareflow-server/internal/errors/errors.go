@@ -25,3 +25,14 @@ var (
 var (
 	ErrUserNotFoundWithPhone = &CustomError{Arg: 409, Message: "User was not found with phone number"}
 )
+
+var (
+	ErrTokenIsNotValid = &CustomError{Arg: 409, Message: "Token is not valid"}
+)
+
+// Warehouse errors
+
+var (
+	ErrWarehouseAlreadyExist = &CustomError{Arg: 409, Message: "Warehouse Already Exist with name"}
+	ErrWareHouseNotFound     = &CustomError{Arg: 409, Message: "Warehouse not found with name"}
+)

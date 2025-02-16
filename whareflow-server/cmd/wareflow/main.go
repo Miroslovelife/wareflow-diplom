@@ -35,7 +35,6 @@ func main() {
 
 	echoServer := server.NewEchoServer(*log, db, cfg)
 	echoServer.Start()
-
 }
 
 func setupLogger(env string) *slog.Logger {
@@ -58,3 +57,5 @@ func setupLogger(env string) *slog.Logger {
 
 	return log
 }
+
+//TODO: realize generic in repo layer

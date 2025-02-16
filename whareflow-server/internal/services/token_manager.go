@@ -80,5 +80,5 @@ func (ja *TokenM) ExtractUuidFromToken(requestToken, secret string) (string, err
 	if !ok || !token.Valid {
 		return "", fmt.Errorf("invalid Token")
 	}
-	return claims["uuid"].(string), nil
+	return claims["userId"].(string), nil
 }

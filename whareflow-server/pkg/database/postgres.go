@@ -26,6 +26,7 @@ func NewPostgres(dsn string) Database {
 	})
 
 	return dbInstance
+
 }
 
 func (p *postgresDb) GetDb() *gorm.DB {

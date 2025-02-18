@@ -6,6 +6,7 @@ type WarehouseModelRequest struct {
 }
 
 type WarehouseModelResponse struct {
+	Id      uint64 `json:"id"`
 	Address string `json:"address"`
 	Name    string `json:"name"`
 }

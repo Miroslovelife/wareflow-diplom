@@ -43,6 +43,15 @@ definitions:
       name:
         type: string
     type: object
+  delivery.ZoneModelRequest:
+    properties:
+      capacity:
+        type: integer
+      name:
+        type: string
+      warehouse_id:
+        type: integer
+    type: object
 host: localhost:8089
 info:
   contact: {}
@@ -358,6 +367,44 @@ paths:
       summary: Создание склада
       tags:
       - warehouse
+  /zone:
+    post:
+      consumes:
+      - application/json
+      description: Создает новую зону склада
+      parameters:
+      - description: Данные для создания склада
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/delivery.ZoneModelRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'message: warehouse success created'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: 'error: invalid request body'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: 'error: internal server error'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Создание зоны склада
+      tags:
+      - zone
 securityDefinitions:
   ApiKeyAuth:
     in: header

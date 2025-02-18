@@ -54,46 +54,48 @@ func (s *echoServer) Start() {
 
 	s.app.GET("/swagger/*", echoSwagger.WrapHandler)
 
-	s.InitUserRoutes(v1)
-	s.InitWarehouseRoutes(v1)
+	s.InitRoutes(v1)
 
 	s.app.Logger.Fatal(s.app.Start(fmt.Sprintf(":%d", 8089)))
 }
 
-func (s *echoServer) InitUserRoutes(group *echo.Group) {
+func (s *echoServer) InitRoutes(group *echo.Group) {
 	// Layers
 	userPostgresRepository := repositories.NewUserPostgresRepository(s.db, s.logger)
 	passwordHasher := services.NewSHA1Hasher(s.cfg.Auth.PasswordSalt)
 	manager := services.NewTokenM()
 	userUsecase := usecase.NewUserUsecase(userPostgresRepository, passwordHasher, manager)
 	userHttpHandler := handler.NewUserHttpHandler(s.logger, userUsecase, s.cfg)
+	roleMiddleware := custom_middleware.NewRoleHttpMiddleware(userUsecase)
 
-	// Routes
+	whRepository := repositories.NewWarehouseRepository(s.db, s.logger)
+	whUsecase := usecase.NewIWarehouseUsecase(whRepository)
+	auUsecase := usecase.NewAuthUsecase(manager)
+	auMiddlware := custom_middleware.NewAuthHttpMiddleware(auUsecase, s.cfg)
+	whHttpHandler := handler.NewIWareHouseHandler(s.logger, whUsecase)
+
+	zoneRepo := repositories.NewZoneRepository(s.db, s.logger)
+	zoneUsecase := usecase.NewZoneUsecase(zoneRepo)
+	zoneHttpHandler := handler.NewIZoneHandler(s.logger, zoneUsecase)
+
+	//User routes
 	userRouters := group.Group("/auth")
 	userRouters.POST("/sign-up", userHttpHandler.Register)
 	userRouters.POST("/sign-in-phone", userHttpHandler.LoginByPhoneNumber)
 	userRouters.POST("/sign-in-email", userHttpHandler.LoginByEmail)
 	userRouters.POST("/refresh", userHttpHandler.Refresh)
 
-}
-
-func (s *echoServer) InitWarehouseRoutes(group *echo.Group) {
-	whRepository := repositories.NewWarehouseRepository(s.db, s.logger)
-	whUsecase := usecase.NewIWarehouseUsecase(whRepository)
-	manager := services.NewTokenM()
-	auUsecase := usecase.NewAuthUsecase(manager)
-	auMiddlware := custom_middleware.NewAuthHttpMiddleware(auUsecase, s.cfg)
-	whHttpHandler := handler.NewIWareHouseHandler(s.logger, whUsecase)
-
+	// Wh routes
 	whRouters := group.Group("/warehouse")
-	whRouters.Use(auMiddlware.Auth)
+	whRouters.Use(auMiddlware.Auth, roleMiddleware.IsAdmin)
 	whRouters.POST("", whHttpHandler.CreateWarehouse)
 	whRouters.GET("", whHttpHandler.GetAllWarehouses)
 	whRouters.GET("/:name", whHttpHandler.GetWarehouse)
 	whRouters.PUT("/:name", whHttpHandler.UpdateWarehouse)
 	whRouters.DELETE("/:name", whHttpHandler.DeleteWarehouse)
-}
 
-func (s *echoServer) InitItemRoutes(group *echo.Group) {
-
+	// Zone routes
+	zoneRouters := group.Group("/zone")
+	zoneRouters.Use(auMiddlware.Auth, roleMiddleware.IsAdmin)
+	zoneRouters.POST("", zoneHttpHandler.CreateZone)
 }

@@ -13,6 +13,8 @@ type UserUsecase interface {
 	LoginByEmail(in *delivery.UserLoginByEmail, secretAccess string, secretRefresh string, expiry uint8) (string, string, error)
 	LoginByPhoneNumber(in *delivery.UserLoginByPhoneNumber, secretAccess string, secretRefresh string, expiry uint8) (string, string, error)
 	Refresh(refreshToken, secretAccess, secretRefresh string, expAccess, expRefresh uint8) (string, string, error)
+	IsAdmin(userId string) (bool, error)
+	IsEmployer(userId string) (bool, error)
 }
 
 type userUsecaseImpl struct {
@@ -149,4 +151,34 @@ func (us *userUsecaseImpl) Refresh(refreshToken, secretAccess, secretRefresh str
 	}
 
 	return newAccessToken, newRefreshToken, nil
+}
+
+func (us *userUsecaseImpl) IsAdmin(userId string) (bool, error) {
+	user, err := us.userRepository.FindUserData(map[string]interface{}{
+		"uuid": userId,
+	})
+	if err != nil {
+		return false, err
+	}
+
+	if user.Role != "admin" {
+		return false, nil
+	}
+
+	return true, nil
+}
+
+func (us *userUsecaseImpl) IsEmployer(userId string) (bool, error) {
+	user, err := us.userRepository.FindUserData(map[string]interface{}{
+		"uuid": userId,
+	})
+	if err != nil {
+		return false, err
+	}
+
+	if user.Role != "employer" {
+		return false, nil
+	}
+
+	return true, nil
 }

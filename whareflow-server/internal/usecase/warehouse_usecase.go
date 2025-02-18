@@ -50,6 +50,7 @@ func (wu *IWarehouseUsecase) GetAllWarehouse(userId string) ([]delivery.Warehous
 
 	for _, valueRepo := range *warehousesRepo {
 		warehouse := delivery.WarehouseModelResponse{
+			Id:      valueRepo.Id,
 			Address: valueRepo.Address,
 			Name:    valueRepo.Name,
 		}
@@ -68,6 +69,7 @@ func (wu *IWarehouseUsecase) GetWarehouse(userId, name string) (*delivery.Wareho
 	}
 
 	return &delivery.WarehouseModelResponse{
+		Id:      warehouseRepo.Id,
 		Address: warehouseRepo.Address,
 		Name:    warehouseRepo.Name,
 	}, nil

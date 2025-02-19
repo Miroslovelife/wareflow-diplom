@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"github.com/Miroslovelife/whareflow/internal/domain"
+	custom_errors "github.com/Miroslovelife/whareflow/internal/errors"
 	"github.com/Miroslovelife/whareflow/pkg/database"
 	"log/slog"
 )
@@ -18,76 +19,85 @@ func NewZoneRepository(db database.Database, logger slog.Logger) *zonePostgresRe
 	}
 }
 
-func (wr *zonePostgresRepository) InsertZoneData(zone *domain.Zone) error {
-	resultUser := wr.db.GetDb().Model(domain.WareHouse{}).Where("id = ?", zone.WarehouseId)
-	if resultUser.Error != nil {
-		return resultUser.Error
+func (wr *zonePostgresRepository) InsertZoneData(zone *domain.Zone, userId string) error {
+	var count int64
+	wr.db.GetDb().Model(domain.WareHouse{}).Where("id = ? AND uuid_user = ?", zone.WarehouseId, userId).Count(&count)
+	if count != 1 {
+		return custom_errors.ErrWareHouseNotFound
 	}
 
-	resultWarehouse := wr.db.GetDb().Create(zone)
+	resultZone := wr.db.GetDb().Create(zone)
 
-	if resultWarehouse.Error != nil {
-		return resultWarehouse.Error
+	if resultZone.Error != nil {
+		return resultZone.Error
 	}
 
 	return nil
 }
 
-//func (wr *wareHousePostgresRepository) UpdateZoneData(zone *domain.Zone, zoneName string) error {
-//	wh := domain.WareHouse{}
-//
-//	resultUser := wr.db.GetDb().Model(&domain.User{}).Where("uuid = ?", warehouse.UuidUser)
-//	if resultUser.Error != nil {
-//		return resultUser.Error
-//	}
-//
-//	var countRows int64
-//
-//	wr.db.GetDb().Model(&wh).Where("uuid_user = ? AND name = ?", warehouse.UuidUser, warehouse.Name).Count(&countRows)
-//	if countRows > 1 {
-//		return custom_errors.ErrWarehouseAlreadyExist
-//	}
-//
-//	resultWarehouse := wr.db.GetDb().Model(&wh).Where("uuid_user = ? AND name = ?", warehouse.UuidUser, warehouseName).Updates(warehouse)
-//	if resultWarehouse.Error != nil {
-//		return resultWarehouse.Error
-//	}
-//	if resultWarehouse.RowsAffected == 0 {
-//		return custom_errors.ErrWareHouseNotFound
-//	}
-//
-//	return nil
-//}
-//
-//func (wr *wareHousePostgresRepository) DeleteZoneHouseData(uuid, name string) error {
-//	warehouse := domain.WareHouse{}
-//
-//	resultErr := wr.db.GetDb().Where("name = ? AND uuid_user = ?", name, uuid).Delete(warehouse)
-//	if resultErr.Error != nil {
-//		return resultErr.Error
-//	}
-//
-//	return nil
-//}
-//
-//func (wr *wareHousePostgresRepository) FindAllZoneHouseData(uuid string) (*[]domain.Zone, error) {
-//	var warehouses []domain.WareHouse
-//
-//	resultWarehouses := wr.db.GetDb().Where("uuid_user = ?", uuid).Find(&warehouses)
-//	if resultWarehouses.Error != nil {
-//		return nil, resultWarehouses.Error
-//	}
-//
-//	return &warehouses, nil
-//}
-//
-//func (wr *wareHousePostgresRepository) FindZoneData(uuid, name string) (*domain.Zone, error) {
-//	var warehouse domain.WareHouse
-//
-//	resultWarehouses := wr.db.GetDb().Where("name = ? AND uuid_user = ?", name, uuid).Find(&warehouse)
-//	if resultWarehouses.Error != nil {
-//		return nil, resultWarehouses.Error
-//	}
-//
-//	return &warehouse, nil
-//}
+func (wr *zonePostgresRepository) UpdateZoneData(zone *domain.Zone, userId string) error {
+
+	var count int64
+	wr.db.GetDb().Model(domain.WareHouse{}).Where("id = ? AND uuid_user = ?", zone.WarehouseId, userId).Count(&count)
+	if count != 1 {
+		return custom_errors.ErrWareHouseNotFound
+	}
+
+	resultZone := wr.db.GetDb().Model(zone).Where("id = ?", zone.Id).Updates(zone)
+	if resultZone.Error != nil {
+		return resultZone.Error
+	}
+
+	return nil
+}
+
+func (wr *zonePostgresRepository) FindAllZoneData(userId string, warehouseId int) (*[]domain.Zone, error) {
+	var zones []domain.Zone
+	var countWarehouse int64
+
+	wr.db.GetDb().Model(domain.WareHouse{}).Where("id = ? AND uuid_user = ?", warehouseId, userId).Count(&countWarehouse)
+	if countWarehouse != 1 {
+		return nil, custom_errors.ErrWareHouseNotFound
+	}
+
+	err := wr.db.GetDb().Where("ware_house_id = ?", warehouseId).Find(&zones)
+	if err.Error != nil {
+		return nil, err.Error
+	}
+
+	return &zones, nil
+}
+
+func (wr *zonePostgresRepository) FindZoneData(userId string, warehouseId, zoneId int) (*domain.Zone, error) {
+	var zones domain.Zone
+	var countWarehouse int64
+
+	wr.db.GetDb().Model(domain.WareHouse{}).Where("id = ? AND uuid_user = ?", warehouseId, userId).Count(&countWarehouse)
+	if countWarehouse != 1 {
+		return nil, custom_errors.ErrWareHouseNotFound
+	}
+
+	err := wr.db.GetDb().Where("ware_house_id = ? AND id = ?", warehouseId, zoneId).Find(&zones)
+	if err.Error != nil {
+		return nil, err.Error
+	}
+
+	return &zones, nil
+}
+
+func (wr *zonePostgresRepository) DeleteZoneData(userId string, warehouseId, zoneId int) error {
+	var zone domain.Zone
+	var countWarehouse int64
+
+	wr.db.GetDb().Model(domain.WareHouse{}).Where("id = ? AND uuid_user = ?", warehouseId, userId).Count(&countWarehouse)
+	if countWarehouse != 1 {
+		return custom_errors.ErrWareHouseNotFound
+	}
+
+	err := wr.db.GetDb().Where("ware_house_id = ? AND id = ?", warehouseId, zoneId).Delete(&zone)
+	if err.Error != nil {
+		return err.Error
+	}
+
+	return nil
+}

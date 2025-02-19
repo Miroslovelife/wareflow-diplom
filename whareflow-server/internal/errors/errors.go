@@ -36,3 +36,7 @@ var (
 	ErrWarehouseAlreadyExist = &CustomError{Arg: 409, Message: "Warehouse Already Exist with name"}
 	ErrWareHouseNotFound     = &CustomError{Arg: 409, Message: "Warehouse not found with name"}
 )
+
+// Zone errors
+
+var ()

@@ -11,13 +11,12 @@ all: build
 build:
 	@echo "Сборка приложения: $(APP_NAME)"
 	export CONFIG_WARE_FLOW="$(CONFIG_DIR)$(CURRENT_CONFIG)"
-	go build -C $(APP_DIR)/$(APP_NAME) -o $(APP_NAME)
+	@export CONFIG_WARE_FLOW="$(CONFIG_DIR)$(CURRENT_CONFIG)" && go build -C $(APP_DIR)/$(APP_NAME) -o $(APP_NAME)
 
 .PHONY: run
 run:
 	@echo "Запуск приложения: $(APP_NAME)"
-	export CONFIG_WARE_FLOW="$(CONFIG_DIR)$(CURRENT_CONFIG)"
-	go run $(APP_DIR)$(APP_NAME)/main.go
+	@export CONFIG_WARE_FLOW="$(CONFIG_DIR)$(CURRENT_CONFIG)" && go run $(APP_DIR)$(APP_NAME)/main.go
 
 .PHONY: clean
 clean:

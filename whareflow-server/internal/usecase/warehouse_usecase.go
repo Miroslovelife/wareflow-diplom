@@ -58,7 +58,7 @@ func (wu *IWarehouseUsecase) GetAllWarehouse(userId string) ([]delivery.Warehous
 		warehouses = append(warehouses, warehouse)
 	}
 
-	return warehouses, err
+	return warehouses, nil
 }
 
 func (wu *IWarehouseUsecase) GetWarehouse(userId, name string) (*delivery.WarehouseModelResponse, error) {

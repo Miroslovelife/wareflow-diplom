@@ -95,7 +95,11 @@ func (s *echoServer) InitRoutes(group *echo.Group) {
 	whRouters.DELETE("/:name", whHttpHandler.DeleteWarehouse)
 
 	// Zone routes
-	zoneRouters := group.Group("/zone")
+	zoneRouters := whRouters.Group("/:warehouse_id/zone")
 	zoneRouters.Use(auMiddlware.Auth, roleMiddleware.IsAdmin)
 	zoneRouters.POST("", zoneHttpHandler.CreateZone)
+	zoneRouters.PUT("/:zone_id", zoneHttpHandler.UpdateZone)
+	zoneRouters.GET("", zoneHttpHandler.GetAllZones)
+	zoneRouters.GET("/:zone_id", zoneHttpHandler.GetZone)
+	zoneRouters.DELETE("/:zone_id", zoneHttpHandler.DeleteZone)
 }

@@ -10,23 +10,24 @@ import (
 	"github.com/labstack/echo/v4"
 	"log/slog"
 	"net/http"
+	"time"
 )
 
 type UserHandler interface {
 	Register(echo.Context) error
 	LoginByPhoneNumber(echo.Context) error
 	LoginByEmail(echo.Context) error
-	Refresh(c echo.Context) error
+	Refresh(echo.Context) error
 }
 
-type userHttpHandler struct {
+type IUserHttpHandler struct {
 	userUseCase usecase.UserUsecase
 	logger      *slog.Logger
 	cfg         config.Config
 }
 
-func NewUserHttpHandler(logger slog.Logger, userUseCase usecase.UserUsecase, cfg config.Config) *userHttpHandler {
-	return &userHttpHandler{
+func NewIUserHttpHandler(logger slog.Logger, userUseCase usecase.UserUsecase, cfg config.Config) *IUserHttpHandler {
+	return &IUserHttpHandler{
 		userUseCase: userUseCase,
 		logger:      &logger,
 		cfg:         cfg,
@@ -44,7 +45,7 @@ func NewUserHttpHandler(logger slog.Logger, userUseCase usecase.UserUsecase, cfg
 // @Failure 400 {object} map[string]string "error: invalid request body"
 // @Failure 500 {object} map[string]string "error: internal server error"
 // @Router /auth/sign-up [post]
-func (h *userHttpHandler) Register(c echo.Context) error {
+func (h *IUserHttpHandler) Register(c echo.Context) error {
 	reqBody := new(delivery.UserReg)
 
 	if err := c.Bind(reqBody); err != nil {
@@ -86,7 +87,7 @@ func (h *userHttpHandler) Register(c echo.Context) error {
 // @Failure 400 {object} map[string]string "error: invalid request body"
 // @Failure 500 {object} map[string]string "error: internal server error"
 // @Router /auth/sign-in-phone [post]
-func (h *userHttpHandler) LoginByPhoneNumber(c echo.Context) error {
+func (h *IUserHttpHandler) LoginByPhoneNumber(c echo.Context) error {
 	reqBody := new(delivery.UserLoginByPhoneNumber)
 
 	if err := c.Bind(reqBody); err != nil {
@@ -103,9 +104,20 @@ func (h *userHttpHandler) LoginByPhoneNumber(c echo.Context) error {
 		})
 	}
 
+	refreshCookie := http.Cookie{
+		Name:     "refresh-token",
+		Value:    refreshToken,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   false,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   h.cfg.Auth.ExpRefreshToken,
+	}
+
+	c.SetCookie(&refreshCookie)
+
 	return c.JSON(http.StatusOK, map[string]string{
-		"access-token":  accessToken,
-		"refresh-token": refreshToken,
+		"accessToken": accessToken,
 	})
 }
 
@@ -119,7 +131,7 @@ func (h *userHttpHandler) LoginByPhoneNumber(c echo.Context) error {
 // @Failure 400 {object} map[string]string "error: invalid request body"
 // @Failure 500 {object} map[string]string "error: internal server error"
 // @Router /auth/sign-in-email [post]
-func (h *userHttpHandler) LoginByEmail(c echo.Context) error {
+func (h *IUserHttpHandler) LoginByEmail(c echo.Context) error {
 	reqBody := new(delivery.UserLoginByEmail)
 
 	if err := c.Bind(reqBody); err != nil {
@@ -136,9 +148,21 @@ func (h *userHttpHandler) LoginByEmail(c echo.Context) error {
 		})
 	}
 
+	refreshCookie := http.Cookie{
+		Name:     "refresh-token",
+		Value:    refreshToken,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   false,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   h.cfg.Auth.ExpRefreshToken,
+		Expires:  time.Now().Add(time.Duration(h.cfg.Auth.ExpRefreshToken) * time.Second),
+	}
+
+	c.SetCookie(&refreshCookie)
+
 	return c.JSON(http.StatusOK, map[string]string{
-		"access-token":  accessToken,
-		"refresh-token": refreshToken,
+		"accessToken": accessToken,
 	})
 }
 
@@ -148,21 +172,25 @@ func (h *userHttpHandler) LoginByEmail(c echo.Context) error {
 // @Tags auth
 // @Accept			json
 // @Produce		json
-// @Param request body delivery.UserRefreshTokens true "ww"
 // @Failure 400 {object} map[string]string "error: invalid request body"
 // @Failure 500 {object} map[string]string "error: internal server error"
-// @Router /auth/refresh [post]
-func (h *userHttpHandler) Refresh(c echo.Context) error {
-	reqBody := new(delivery.UserRefreshTokens)
+// @Router /auth/refresh [get]
+func (h *IUserHttpHandler) Refresh(c echo.Context) error {
 
-	if err := c.Bind(reqBody); err != nil {
-		h.logger.Error(fmt.Sprintf("Incorrect request body: %v", err))
-		return c.JSON(http.StatusBadRequest, map[string]string{
-			"error": "invalid request body",
+	cookies := c.Cookies()
+	for _, cookie := range cookies {
+		fmt.Println("Cookie:", cookie.Name, "Value:", cookie.Value)
+	}
+
+	refreshToken, err := c.Cookie("refresh-token")
+	if err != nil || refreshToken == nil {
+		h.logger.Error("Refresh token cookie is missing or invalid")
+		return c.JSON(http.StatusUnauthorized, map[string]string{
+			"error": "refresh token is missing or invalid",
 		})
 	}
 
-	accessToken, refreshToken, err := h.userUseCase.Refresh(reqBody.RefreshToken, h.cfg.Auth.SecretAccessToken, h.cfg.Auth.SecretRefreshToken, h.cfg.Auth.ExpAccessToken, h.cfg.Auth.ExpRefreshToken)
+	newAccessToken, newRefreshToken, err := h.userUseCase.Refresh(refreshToken.Value, h.cfg.Auth.SecretAccessToken, h.cfg.Auth.SecretRefreshToken, h.cfg.Auth.ExpAccessToken, h.cfg.Auth.ExpRefreshToken)
 	if err != nil {
 		if errors.Is(err, error_custom.ErrTokenIsNotValid) {
 			return c.JSON(http.StatusUnauthorized, map[string]string{
@@ -175,8 +203,19 @@ func (h *userHttpHandler) Refresh(c echo.Context) error {
 
 	}
 
+	refreshCookie := http.Cookie{
+		Name:     "refresh-token",
+		Value:    newRefreshToken,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   false,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   h.cfg.Auth.ExpRefreshToken,
+	}
+
+	c.SetCookie(&refreshCookie)
+
 	return c.JSON(http.StatusOK, map[string]string{
-		"access-token":  accessToken,
-		"refresh-token": refreshToken,
+		"accessToken": newAccessToken,
 	})
 }

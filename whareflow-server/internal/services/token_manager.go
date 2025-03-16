@@ -7,7 +7,7 @@ import (
 )
 
 type TokenManager interface {
-	CreateToken(secret string, expiry uint8, args map[string]interface{}) (string, error)
+	CreateToken(secret string, expiry int, args map[string]interface{}) (string, error)
 	IsAuthorized(requestToken, secret string) (bool, error)
 	ExtractUuidFromToken(requestToken, secret string) (string, error)
 }
@@ -24,7 +24,7 @@ type DynamicCustomClaims struct {
 	CustomClaims map[string]interface{}
 }
 
-func (ja *TokenM) CreateToken(secret string, expiry uint8, args map[string]interface{}) (string, error) {
+func (ja *TokenM) CreateToken(secret string, expiry int, args map[string]interface{}) (string, error) {
 
 	exp := jwt.NumericDate{
 		Time: time.Now().Add(time.Hour * time.Duration(expiry)),
@@ -80,5 +80,8 @@ func (ja *TokenM) ExtractUuidFromToken(requestToken, secret string) (string, err
 	if !ok || !token.Valid {
 		return "", fmt.Errorf("invalid Token")
 	}
+
+	fmt.Println(claims)
+
 	return claims["userId"].(string), nil
 }

@@ -9,19 +9,28 @@ import (
 	"log/slog"
 )
 
-type wareHousePostgresRepository struct {
+type WareHouseRepository interface {
+	InsertWareHouseData(warehouse *domain.WareHouse) error
+	UpdateWareHouseData(warehouse *domain.WareHouse, warehouseId uint) error
+	DeleteWareHouseData(uuid string, id uint) error
+	FindAllWareHouseData(uuid string) (*[]domain.WareHouse, error)
+	FindWareHouseData(uuid string, id uint) (*domain.WareHouse, error)
+	FindWareHouseOwner(warehouseId uint) (*domain.WareHouse, error)
+}
+
+type WareHousePostgresRepository struct {
 	db     database.Database
 	logger slog.Logger
 }
 
-func NewWarehouseRepository(db database.Database, logger slog.Logger) *wareHousePostgresRepository {
-	return &wareHousePostgresRepository{
+func NewWarehouseRepository(db database.Database, logger slog.Logger) *WareHousePostgresRepository {
+	return &WareHousePostgresRepository{
 		db:     db,
 		logger: logger,
 	}
 }
 
-func (wr *wareHousePostgresRepository) InsertWareHouseData(warehouse *domain.WareHouse) error {
+func (wr *WareHousePostgresRepository) InsertWareHouseData(warehouse *domain.WareHouse) error {
 	user := domain.User{}
 	resultUser := wr.db.GetDb().Where("uuid = ?", warehouse.UuidUser).First(&user)
 	if resultUser.Error != nil {
@@ -43,7 +52,7 @@ func (wr *wareHousePostgresRepository) InsertWareHouseData(warehouse *domain.War
 	return nil
 }
 
-func (wr *wareHousePostgresRepository) UpdateWareHouseData(warehouse *domain.WareHouse, warehouseName string) error {
+func (wr *WareHousePostgresRepository) UpdateWareHouseData(warehouse *domain.WareHouse, warehouseId uint) error {
 	wh := domain.WareHouse{}
 
 	resultUser := wr.db.GetDb().Model(&domain.User{}).Where("uuid = ?", warehouse.UuidUser)
@@ -58,7 +67,7 @@ func (wr *wareHousePostgresRepository) UpdateWareHouseData(warehouse *domain.War
 		return custom_errors.ErrWarehouseAlreadyExist
 	}
 
-	resultWarehouse := wr.db.GetDb().Model(&wh).Where("uuid_user = ? AND name = ?", warehouse.UuidUser, warehouseName).Updates(warehouse)
+	resultWarehouse := wr.db.GetDb().Model(&wh).Where("uuid_user = ? AND id = ?", warehouse.UuidUser, warehouseId).Updates(warehouse)
 	if resultWarehouse.Error != nil {
 		return resultWarehouse.Error
 	}
@@ -69,10 +78,10 @@ func (wr *wareHousePostgresRepository) UpdateWareHouseData(warehouse *domain.War
 	return nil
 }
 
-func (wr *wareHousePostgresRepository) DeleteWareHouseData(uuid, name string) error {
+func (wr *WareHousePostgresRepository) DeleteWareHouseData(uuid string, id uint) error {
 	warehouse := domain.WareHouse{}
 
-	resultErr := wr.db.GetDb().Where("name = ? AND uuid_user = ?", name, uuid).Delete(warehouse)
+	resultErr := wr.db.GetDb().Where("id = ? AND uuid_user = ?", id, uuid).Delete(warehouse)
 	if resultErr.Error != nil {
 		return resultErr.Error
 	}
@@ -80,7 +89,7 @@ func (wr *wareHousePostgresRepository) DeleteWareHouseData(uuid, name string) er
 	return nil
 }
 
-func (wr *wareHousePostgresRepository) FindAllWareHouseData(uuid string) (*[]domain.WareHouse, error) {
+func (wr *WareHousePostgresRepository) FindAllWareHouseData(uuid string) (*[]domain.WareHouse, error) {
 	var warehouses []domain.WareHouse
 
 	resultWarehouses := wr.db.GetDb().Where("uuid_user = ?", uuid).Find(&warehouses)
@@ -91,12 +100,23 @@ func (wr *wareHousePostgresRepository) FindAllWareHouseData(uuid string) (*[]dom
 	return &warehouses, nil
 }
 
-func (wr *wareHousePostgresRepository) FindWareHouseData(uuid, name string) (*domain.WareHouse, error) {
+func (wr *WareHousePostgresRepository) FindWareHouseData(uuid string, id uint) (*domain.WareHouse, error) {
 	var warehouse domain.WareHouse
 
-	resultWarehouses := wr.db.GetDb().Where("name = ? AND uuid_user = ?", name, uuid).Find(&warehouse)
+	resultWarehouses := wr.db.GetDb().Where("id = ? AND uuid_user = ?", id, uuid).Find(&warehouse)
 	if resultWarehouses.Error != nil {
 		return nil, resultWarehouses.Error
+	}
+
+	return &warehouse, nil
+}
+
+func (wr *WareHousePostgresRepository) FindWareHouseOwner(warehouseId uint) (*domain.WareHouse, error) {
+	var warehouse domain.WareHouse
+
+	err := wr.db.GetDb().Where("id = ?", warehouseId).First(&warehouse).Error
+	if err != nil {
+		return nil, err
 	}
 
 	return &warehouse, nil

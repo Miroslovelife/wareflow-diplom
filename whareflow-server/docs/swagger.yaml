@@ -1,5 +1,14 @@
-basePath: /v1
+basePath: /api/v1/owner
 definitions:
+  delivery.ProductModelRequest:
+    properties:
+      count:
+        type: integer
+      description:
+        type: string
+      title:
+        type: string
+    type: object
   delivery.UserLoginByEmail:
     properties:
       email:
@@ -12,11 +21,6 @@ definitions:
       password:
         type: string
       phone_number:
-        type: string
-    type: object
-  delivery.UserRefreshTokens:
-    properties:
-      refresh_token:
         type: string
     type: object
   delivery.UserReg:
@@ -40,7 +44,7 @@ definitions:
     properties:
       address:
         type: string
-      name:
+      id:
         type: string
     type: object
   delivery.ZoneModelRequest:
@@ -57,17 +61,10 @@ info:
   version: "1.0"
 paths:
   /auth/refresh:
-    post:
+    get:
       consumes:
       - application/json
       description: Регистрирует нового пользователя
-      parameters:
-      - description: ww
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/delivery.UserRefreshTokens'
       produces:
       - application/json
       responses:
@@ -365,6 +362,43 @@ paths:
       summary: Создание склада
       tags:
       - warehouse
+  /warehouse/{warehouse_id}/product:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает список всех товаров со склада
+      parameters:
+      - description: warehouse id
+        in: path
+        name: warehouse_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '[]delivery.ProductModelResponse'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: 'error: invalid request body'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: 'error: internal server error'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Получение всех товаров со склада
+      tags:
+      - product
   /warehouse/{warehouse_id}/zone:
     get:
       consumes:
@@ -574,6 +608,142 @@ paths:
       summary: Обновление зоны склада
       tags:
       - zone
+  /warehouse/{warehouse_id}/zone/{zone_id}/product:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает список всех товаров с зоны склада
+      parameters:
+      - description: warehouse id
+        in: path
+        name: warehouse_id
+        required: true
+        type: string
+      - description: zone id
+        in: path
+        name: zone_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '[]delivery.ProductModelResponse'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: 'error: invalid request body'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: 'error: internal server error'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Получение всех товаров с зоны склада
+      tags:
+      - product
+    post:
+      consumes:
+      - application/json
+      description: Создает новый продукт
+      parameters:
+      - description: warehouse id
+        in: path
+        name: warehouse_id
+        required: true
+        type: string
+      - description: zone id
+        in: path
+        name: zone_id
+        required: true
+        type: string
+      - description: Данные для создания склада
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/delivery.ProductModelRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'message: product success created'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: 'error: invalid request body'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: 'error: internal server error'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Создание продукта
+      tags:
+      - product
+  /warehouse/{warehouse_id}/zone/{zone_id}/product/{product_id}:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает товар
+      parameters:
+      - description: warehouse id
+        in: path
+        name: warehouse_id
+        required: true
+        type: string
+      - description: zone id
+        in: path
+        name: zone_id
+        required: true
+        type: string
+      - description: product id
+        in: path
+        name: product_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: delivery.ProductModelResponse
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: 'error: invalid request body'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: 'error: internal server error'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Получение товара
+      tags:
+      - product
 securityDefinitions:
   ApiKeyAuth:
     in: header

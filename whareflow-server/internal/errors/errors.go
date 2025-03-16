@@ -39,4 +39,12 @@ var (
 
 // Zone errors
 
-var ()
+var (
+	ErrZoneNotFound = &CustomError{Arg: 409, Message: "Zone not found with name"}
+)
+
+// Product errors
+
+var (
+	ErrProductNotFound = &CustomError{Arg: 409, Message: "Product not found with name"}
+)

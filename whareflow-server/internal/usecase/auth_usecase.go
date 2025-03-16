@@ -8,20 +8,20 @@ import (
 
 type AuthUsecase interface {
 	Auth(token, secret string) (bool, string, error)
-	Refresh(secret string, expiry uint8, in *http.JWTCustomClaims) (string, error)
+	Refresh(secret string, expiry int, in *http.JWTCustomClaims) (string, error)
 }
 
-type AuthUsecaseImpl struct {
+type IAuthUsecase struct {
 	tokenManager services.TokenManager
 }
 
-func NewAuthUsecase(tokenManager services.TokenManager) *AuthUsecaseImpl {
-	return &AuthUsecaseImpl{
+func NewIAuthUsecase(tokenManager services.TokenManager) *IAuthUsecase {
+	return &IAuthUsecase{
 		tokenManager: tokenManager,
 	}
 }
 
-func (au *AuthUsecaseImpl) Auth(token, secret string) (bool, string, error) {
+func (au *IAuthUsecase) Auth(token, secret string) (bool, string, error) {
 	if ok, err := au.tokenManager.IsAuthorized(token, secret); !ok {
 		if err != nil {
 			return false, "", err
@@ -38,7 +38,7 @@ func (au *AuthUsecaseImpl) Auth(token, secret string) (bool, string, error) {
 	return true, userId, nil
 }
 
-func (au *AuthUsecaseImpl) Refresh(secret string, expiry uint8, in *http.JWTCustomClaims) (string, error) {
+func (au *IAuthUsecase) Refresh(secret string, expiry int, in *http.JWTCustomClaims) (string, error) {
 
 	claimsArgs := make(map[string]interface{})
 	val := reflect.ValueOf(in)

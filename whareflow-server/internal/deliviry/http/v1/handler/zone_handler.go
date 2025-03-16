@@ -14,10 +14,10 @@ import (
 
 type ZoneHandler interface {
 	CreateZone(echo.Context) error
-	UpdateZone(c echo.Context) error
-	GetAllZones(c echo.Context) error
-	GetZone(c echo.Context) error
-	DeleteZone(c echo.Context) error
+	UpdateZone(echo.Context) error
+	GetAllZones(echo.Context) error
+	GetZone(echo.Context) error
+	DeleteZone(echo.Context) error
 }
 
 type IZoneHandler struct {

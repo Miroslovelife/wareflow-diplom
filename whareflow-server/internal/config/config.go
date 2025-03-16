@@ -12,6 +12,7 @@ type Config struct {
 	StoragePath StoragePath `yaml:"storage_path" env-required:"true"`
 	HTTPServer  HTTPServer  `yaml:"http_server" env-required:"true"`
 	Auth        Auth        `yaml:"auth" env-required:"true"`
+	QR          QR          `yaml:"qr" env-required:"true"`
 }
 
 type StoragePath struct {
@@ -33,10 +34,15 @@ type HTTPServer struct {
 
 type Auth struct {
 	PasswordSalt       string `yaml:"pass_salt"`
-	ExpAccessToken     uint8  `yaml:"access_token_expiry_hour"`
-	ExpRefreshToken    uint8  `yaml:"refresh_token_expiry_hour"`
+	ExpAccessToken     int    `yaml:"access_token_expiry_hour"`
+	ExpRefreshToken    int    `yaml:"refresh_token_expiry_hour"`
 	SecretAccessToken  string `yaml:"access_token_secret"`
 	SecretRefreshToken string `yaml:"refresh_token_secret"`
+}
+
+type QR struct {
+	UrlFrontend string `yaml:"url_frontend"`
+	PathToFile  string `yaml:"path_to_file"`
 }
 
 func MustLoad() *Config {

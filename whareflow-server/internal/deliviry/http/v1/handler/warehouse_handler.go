@@ -9,6 +9,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"log/slog"
 	"net/http"
+	"strconv"
 )
 
 type WarehouseHandler interface {
@@ -16,7 +17,7 @@ type WarehouseHandler interface {
 	GetWarehouse(echo.Context) error
 	CreateWarehouse(echo.Context) error
 	UpdateWarehouse(echo.Context) error
-	DeleteWarehouse(c echo.Context) error
+	DeleteWarehouse(echo.Context) error
 }
 
 type IWareHouseHandler struct {
@@ -41,7 +42,7 @@ func NewIWareHouseHandler(logger slog.Logger, whUsecase usecase.WarehouseUsecase
 // @Failure 400 {object} map[string]string "error: invalid request body"
 // @Failure 500 {object} map[string]string "error: internal server error"
 // @Security ApiKeyAuth
-// @Router /warehouse [get]
+// @Router /warehouse [get] admin/warehouse [get]
 func (wh *IWareHouseHandler) GetAllWarehouses(c echo.Context) error {
 	userId := c.Get("x-user-id").(string)
 
@@ -71,9 +72,14 @@ func (wh *IWareHouseHandler) GetAllWarehouses(c echo.Context) error {
 func (wh *IWareHouseHandler) GetWarehouse(c echo.Context) error {
 	userId := c.Get("x-user-id").(string)
 
-	warehouseName := c.Param("name")
+	warehouseId, err := strconv.Atoi(c.Param("warehouse_id"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "invalid request body",
+		})
+	}
 
-	warehouse, err := wh.whUsecase.GetWarehouse(userId, warehouseName)
+	warehouse, err := wh.whUsecase.GetWarehouse(userId, uint(warehouseId))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, "")
 	}
@@ -145,14 +151,19 @@ func (wh *IWareHouseHandler) UpdateWarehouse(c echo.Context) error {
 			"error": "invalid request body",
 		})
 	}
-	warehouseName := c.Param("name")
+	warehouseId, err := strconv.Atoi(c.Param("warehouse_id"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "invalid request body",
+		})
+	}
 	userId := c.Get("x-user-id")
 	if userId == nil {
 		return c.JSON(http.StatusInternalServerError, "User ID Not Found")
 	}
 	userIdBytes := userId.(string)
 
-	if err := wh.whUsecase.UpdateWarehouse(reqBody, warehouseName, userIdBytes); err != nil {
+	if err := wh.whUsecase.UpdateWarehouse(reqBody, uint(warehouseId), userIdBytes); err != nil {
 		wh.logger.Error(fmt.Sprintf("Incorrect request body: %v", err))
 		if errors.Is(err, custom_errors.ErrWarehouseAlreadyExist) {
 			return c.JSON(http.StatusBadRequest, map[string]string{
@@ -161,7 +172,7 @@ func (wh *IWareHouseHandler) UpdateWarehouse(c echo.Context) error {
 		}
 		if errors.Is(err, custom_errors.ErrWareHouseNotFound) {
 			return c.JSON(http.StatusBadRequest, map[string]string{
-				"error": fmt.Sprintf("Warehouse not found with name: %s", warehouseName),
+				"error": fmt.Sprintf("Warehouse not found with name: %s", warehouseId),
 			})
 		}
 		return c.JSON(http.StatusInternalServerError, "")
@@ -184,14 +195,19 @@ func (wh *IWareHouseHandler) UpdateWarehouse(c echo.Context) error {
 // @Router /warehouse/{name} [delete]
 func (wh *IWareHouseHandler) DeleteWarehouse(c echo.Context) error {
 	userId := c.Get("x-user-id").(string)
-	warehouseName := c.Param("name")
+	warehouseId, err := strconv.Atoi(c.Param("warehouse_id"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "invalid request body",
+		})
+	}
 
-	if err := wh.whUsecase.DeleteWarehouse(warehouseName, userId); err != nil {
+	if err := wh.whUsecase.DeleteWarehouse(uint(warehouseId), userId); err != nil {
 		return c.JSON(http.StatusInternalServerError, "")
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"warehouses": fmt.Sprintf("warehouse success delete with name: %s", warehouseName),
+		"warehouses": fmt.Sprintf("warehouse success delete with name: %s", warehouseId),
 	})
 
 }

@@ -10,28 +10,29 @@ import (
 
 type UserUsecase interface {
 	Register(in *delivery.UserReg) error
-	LoginByEmail(in *delivery.UserLoginByEmail, secretAccess string, secretRefresh string, expiry uint8) (string, string, error)
-	LoginByPhoneNumber(in *delivery.UserLoginByPhoneNumber, secretAccess string, secretRefresh string, expiry uint8) (string, string, error)
-	Refresh(refreshToken, secretAccess, secretRefresh string, expAccess, expRefresh uint8) (string, string, error)
+	LoginByEmail(in *delivery.UserLoginByEmail, secretAccess string, secretRefresh string, expiry int) (string, string, error)
+	LoginByPhoneNumber(in *delivery.UserLoginByPhoneNumber, secretAccess string, secretRefresh string, expiry int) (string, string, error)
+	Refresh(refreshToken, secretAccess, secretRefresh string, expAccess, expRefresh int) (string, string, error)
 	IsAdmin(userId string) (bool, error)
+	IsOwner(userId string) (bool, error)
 	IsEmployer(userId string) (bool, error)
 }
 
-type userUsecaseImpl struct {
+type IUserUsecase struct {
 	userRepository repositories.UserRepository
 	passwordHasher services.PasswordHasher
 	tokenManager   services.TokenManager
 }
 
-func NewUserUsecase(userRepository repositories.UserRepository, passwordHasher services.PasswordHasher, tokenManager services.TokenManager) *userUsecaseImpl {
-	return &userUsecaseImpl{
+func NewUserUsecase(userRepository repositories.UserRepository, passwordHasher services.PasswordHasher, tokenManager services.TokenManager) *IUserUsecase {
+	return &IUserUsecase{
 		userRepository: userRepository,
 		passwordHasher: passwordHasher,
 		tokenManager:   tokenManager,
 	}
 }
 
-func (us *userUsecaseImpl) Register(in *delivery.UserReg) error {
+func (us *IUserUsecase) Register(in *delivery.UserReg) error {
 
 	hashedPassword := us.passwordHasher.Hash(in.Password)
 
@@ -53,7 +54,7 @@ func (us *userUsecaseImpl) Register(in *delivery.UserReg) error {
 	return nil
 }
 
-func (us *userUsecaseImpl) LoginByEmail(in *delivery.UserLoginByEmail, secretAccess string, secretRefresh string, expiry uint8) (string, string, error) {
+func (us *IUserUsecase) LoginByEmail(in *delivery.UserLoginByEmail, secretAccess string, secretRefresh string, expiry int) (string, string, error) {
 	hashedPassword := us.passwordHasher.Hash(in.Password)
 
 	loginData := map[string]interface{}{
@@ -67,8 +68,8 @@ func (us *userUsecaseImpl) LoginByEmail(in *delivery.UserLoginByEmail, secretAcc
 	}
 
 	claimsAccess := map[string]interface{}{
-		"userId":   string(userExist.Uuid),
-		"username": userExist.Username,
+		"userId": string(userExist.Uuid),
+		"role":   userExist.Role,
 	}
 
 	claimsRefresh := map[string]interface{}{
@@ -89,7 +90,7 @@ func (us *userUsecaseImpl) LoginByEmail(in *delivery.UserLoginByEmail, secretAcc
 
 }
 
-func (us *userUsecaseImpl) LoginByPhoneNumber(in *delivery.UserLoginByPhoneNumber, secretAccess string, secretRefresh string, expiry uint8) (string, string, error) {
+func (us *IUserUsecase) LoginByPhoneNumber(in *delivery.UserLoginByPhoneNumber, secretAccess string, secretRefresh string, expiry int) (string, string, error) {
 	hashedPassword := us.passwordHasher.Hash(in.Password)
 
 	loginData := map[string]interface{}{
@@ -103,8 +104,8 @@ func (us *userUsecaseImpl) LoginByPhoneNumber(in *delivery.UserLoginByPhoneNumbe
 	}
 
 	claimsAccess := map[string]interface{}{
-		"userId":   string(userExist.Uuid),
-		"username": userExist.Username,
+		"userId": string(userExist.Uuid),
+		"role":   userExist.Role,
 	}
 
 	claimsRefresh := map[string]interface{}{
@@ -124,7 +125,7 @@ func (us *userUsecaseImpl) LoginByPhoneNumber(in *delivery.UserLoginByPhoneNumbe
 	return accessToken, refreshToken, nil
 }
 
-func (us *userUsecaseImpl) Refresh(refreshToken, secretAccess, secretRefresh string, expAccess, expRefresh uint8) (string, string, error) {
+func (us *IUserUsecase) Refresh(refreshToken, secretAccess, secretRefresh string, expAccess, expRefresh int) (string, string, error) {
 	if auth, err := us.tokenManager.IsAuthorized(refreshToken, secretRefresh); !auth {
 		return "", "", errors.ErrTokenIsNotValid
 	} else if err != nil {
@@ -136,24 +137,54 @@ func (us *userUsecaseImpl) Refresh(refreshToken, secretAccess, secretRefresh str
 		return "", "", err
 	}
 
-	claims := map[string]interface{}{
+    userData := map[string]interface{}{
 		"uuid": userId,
 	}
 
-	newAccessToken, err := us.tokenManager.CreateToken(secretAccess, expAccess, claims)
+	userExist, err := us.userRepository.FindUserData(userData)
 	if err != nil {
 		return "", "", err
 	}
 
-	newRefreshToken, err := us.tokenManager.CreateToken(secretRefresh, expRefresh, claims)
-	if err != nil {
-		return "", "", err
-	}
+	claimsAccess := map[string]interface{}{
+    		"userId": string(userExist.Uuid),
+    		"role":   userExist.Role,
+    	}
+
+    	claimsRefresh := map[string]interface{}{
+    		"userId": userExist.Uuid,
+    	}
+
+    	newAccessToken, err := us.tokenManager.CreateToken(secretAccess, expAccess, claimsAccess)
+    	if err != nil {
+    		return "", "", err
+    	}
+
+    	newRefreshToken, err := us.tokenManager.CreateToken(secretRefresh, expRefresh, claimsRefresh)
+    	if err != nil {
+    		return "", "", err
+    	}
+
 
 	return newAccessToken, newRefreshToken, nil
 }
 
-func (us *userUsecaseImpl) IsAdmin(userId string) (bool, error) {
+func (us *IUserUsecase) IsOwner(userId string) (bool, error) {
+	user, err := us.userRepository.FindUserData(map[string]interface{}{
+		"uuid": userId,
+	})
+	if err != nil {
+		return false, err
+	}
+
+	if user.Role != "owner" {
+		return false, nil
+	}
+
+	return true, nil
+}
+
+func (us *IUserUsecase) IsAdmin(userId string) (bool, error) {
 	user, err := us.userRepository.FindUserData(map[string]interface{}{
 		"uuid": userId,
 	})
@@ -167,8 +198,7 @@ func (us *userUsecaseImpl) IsAdmin(userId string) (bool, error) {
 
 	return true, nil
 }
-
-func (us *userUsecaseImpl) IsEmployer(userId string) (bool, error) {
+func (us *IUserUsecase) IsEmployer(userId string) (bool, error) {
 	user, err := us.userRepository.FindUserData(map[string]interface{}{
 		"uuid": userId,
 	})

@@ -1,8 +1,8 @@
 package delivery
 
 type WarehouseModelRequest struct {
+	Name    string `json:"id"`
 	Address string `json:"address"`
-	Name    string `json:"name"`
 }
 
 type WarehouseModelResponse struct {

@@ -1,22 +1,53 @@
 package qr
 
-import "github.com/skip2/go-qrcode"
+import (
+	"encoding/base64"
+	"fmt"
+	"github.com/skip2/go-qrcode"
+	"log/slog"
+	"os"
+	"path/filepath"
+)
 
-type Generator struct {
-	gen qrcode.QRCode
+type GeneratorQR interface {
+	Generate(data interface{}, outputDir string, fileName string) (string, error)
+	DecodeToBase64(qrPath string) (string, error)
 }
 
-// @Summary Reg
-// @Description Reg new user
-// @Tags auth
-// @Router /auth/reg [post]
+type Generator struct {
+	logger slog.Logger
+}
 
-func (g *Generator) Generate() ([]byte, error) {
-	var png []byte
-	png, err := qrcode.Encode("fff", qrcode.Medium, 256)
+func NewGenerator(logger slog.Logger) *Generator {
+	return &Generator{
+		logger: logger,
+	}
+}
+
+func (g *Generator) Generate(data interface{}, outputDir string, fileName string) (string, error) {
+	// Преобразуем данные в строку
+	dataStr := fmt.Sprintf("%+v", data)
+
+	// Определяем имя файла
+	outputPath := filepath.Join(outputDir, fileName)
+
+	// Генерируем QR-код
+	err := qrcode.WriteFile(dataStr, qrcode.Medium, 256, outputPath)
 	if err != nil {
-		return nil, err
+		g.logger.Error(fmt.Sprintf("error: %s", err))
+		return "", fmt.Errorf("failed to generate QR code: %w", err)
 	}
 
-	return png, nil
+	return outputPath, nil
+}
+
+func (g *Generator) DecodeToBase64(qrPath string) (string, error) {
+	qrData, err := os.ReadFile(qrPath)
+	if err != nil {
+		return "", err
+	}
+
+	QrImageDecde := "data:image/png;base64," + base64.StdEncoding.EncodeToString(qrData)
+
+	return QrImageDecde, nil
 }

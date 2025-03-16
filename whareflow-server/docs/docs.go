@@ -16,7 +16,7 @@ const docTemplate = `{
     "basePath": "{{.BasePath}}",
     "paths": {
         "/auth/refresh": {
-            "post": {
+            "get": {
                 "description": "Регистрирует нового пользователя",
                 "consumes": [
                     "application/json"
@@ -28,17 +28,6 @@ const docTemplate = `{
                     "auth"
                 ],
                 "summary": "Обновление пары токенов",
-                "parameters": [
-                    {
-                        "description": "ww",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/delivery.UserRefreshTokens"
-                        }
-                    }
-                ],
                 "responses": {
                     "400": {
                         "description": "error: invalid request body",
@@ -494,6 +483,64 @@ const docTemplate = `{
                 }
             }
         },
+        "/warehouse/{warehouse_id}/product": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Возвращает список всех товаров со склада",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "product"
+                ],
+                "summary": "Получение всех товаров со склада",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "warehouse id",
+                        "name": "warehouse_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "[]delivery.ProductModelResponse",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "error: invalid request body",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "error: internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/warehouse/{warehouse_id}/zone": {
             "get": {
                 "security": [
@@ -816,9 +863,232 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/warehouse/{warehouse_id}/zone/{zone_id}/product": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Возвращает список всех товаров с зоны склада",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "product"
+                ],
+                "summary": "Получение всех товаров с зоны склада",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "warehouse id",
+                        "name": "warehouse_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "zone id",
+                        "name": "zone_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "[]delivery.ProductModelResponse",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "error: invalid request body",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "error: internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Создает новый продукт",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "product"
+                ],
+                "summary": "Создание продукта",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "warehouse id",
+                        "name": "warehouse_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "zone id",
+                        "name": "zone_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Данные для создания склада",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/delivery.ProductModelRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "message: product success created",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "error: invalid request body",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "error: internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/warehouse/{warehouse_id}/zone/{zone_id}/product/{product_id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Возвращает товар",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "product"
+                ],
+                "summary": "Получение товара",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "warehouse id",
+                        "name": "warehouse_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "zone id",
+                        "name": "zone_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "product id",
+                        "name": "product_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "delivery.ProductModelResponse",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "error: invalid request body",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "error: internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "delivery.ProductModelRequest": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
         "delivery.UserLoginByEmail": {
             "type": "object",
             "properties": {
@@ -837,14 +1107,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "phone_number": {
-                    "type": "string"
-                }
-            }
-        },
-        "delivery.UserRefreshTokens": {
-            "type": "object",
-            "properties": {
-                "refresh_token": {
                     "type": "string"
                 }
             }
@@ -881,7 +1143,7 @@ const docTemplate = `{
                 "address": {
                     "type": "string"
                 },
-                "name": {
+                "id": {
                     "type": "string"
                 }
             }
@@ -911,7 +1173,7 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "localhost:8089",
-	BasePath:         "/v1",
+	BasePath:         "/api/v1/owner",
 	Schemes:          []string{},
 	Title:            "WareFlow api",
 	Description:      "",

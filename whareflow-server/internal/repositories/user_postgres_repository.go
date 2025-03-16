@@ -10,19 +10,26 @@ import (
 	"log/slog"
 )
 
-type userPostgresRepository struct {
+type UserRepository interface {
+	InsertUserData(in *domain.User) error
+	UpdateUserData(in *domain.User) error
+	FindUserData(filter map[string]interface{}) (*domain.User, error)
+	DeleteUserData(uuid string) error
+}
+
+type UserPostgresRepository struct {
 	db     database.Database
 	logger slog.Logger
 }
 
-func NewUserPostgresRepository(db database.Database, logger slog.Logger) *userPostgresRepository {
-	return &userPostgresRepository{
+func NewUserPostgresRepository(db database.Database, logger slog.Logger) *UserPostgresRepository {
+	return &UserPostgresRepository{
 		db:     db,
 		logger: logger,
 	}
 }
 
-func (ur *userPostgresRepository) InsertUserData(in *domain.User) error {
+func (ur *UserPostgresRepository) InsertUserData(in *domain.User) error {
 	data := &domain.User{
 		PhoneNumber: in.PhoneNumber,
 		Username:    in.Username,
@@ -54,7 +61,7 @@ func (ur *userPostgresRepository) InsertUserData(in *domain.User) error {
 	return nil
 }
 
-func (ur *userPostgresRepository) checkUserExistsWithEmail(email string) error {
+func (ur *UserPostgresRepository) checkUserExistsWithEmail(email string) error {
 	var user domain.User
 
 	resultEmail := ur.db.GetDb().Where("email = ?", email).First(&user)
@@ -69,7 +76,7 @@ func (ur *userPostgresRepository) checkUserExistsWithEmail(email string) error {
 	return error_custom.ErrUserAlreadyExistsWithEmail
 }
 
-func (ur *userPostgresRepository) checkUserExistsWithPhoneNumber(phoneNumber string) error {
+func (ur *UserPostgresRepository) checkUserExistsWithPhoneNumber(phoneNumber string) error {
 	var user domain.User
 
 	resultEmail := ur.db.GetDb().Where("phone_number = ?", phoneNumber).First(&user)
@@ -84,15 +91,15 @@ func (ur *userPostgresRepository) checkUserExistsWithPhoneNumber(phoneNumber str
 	return error_custom.ErrUserAlreadyExistsWithPhone
 }
 
-func (ur *userPostgresRepository) UpdateUserData(in *domain.User) error {
+func (ur *UserPostgresRepository) UpdateUserData(in *domain.User) error {
 	return nil
 }
 
-func (ur *userPostgresRepository) DeleteUserData(uuid string) error {
+func (ur *UserPostgresRepository) DeleteUserData(uuid string) error {
 	return nil
 }
 
-func (ur *userPostgresRepository) FindUserData(filter map[string]interface{}) (*domain.User, error) {
+func (ur *UserPostgresRepository) FindUserData(filter map[string]interface{}) (*domain.User, error) {
 
 	if len(filter) == 0 {
 		return nil, fmt.Errorf("фильтр поиска не может быть пустым")
@@ -107,7 +114,7 @@ func (ur *userPostgresRepository) FindUserData(filter map[string]interface{}) (*
 	}
 
 	result := db.First(data)
-	fmt.Printf("%v", *data)
+
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, fmt.Errorf("пользователь не найден")

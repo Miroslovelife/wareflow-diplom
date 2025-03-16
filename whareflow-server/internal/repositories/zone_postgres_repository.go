@@ -7,19 +7,27 @@ import (
 	"log/slog"
 )
 
-type zonePostgresRepository struct {
+type ZoneRepository interface {
+	InsertZoneData(zone *domain.Zone, userId string) error
+	UpdateZoneData(zone *domain.Zone, userId string) error
+	FindAllZoneData(userId string, warehouseId int) (*[]domain.Zone, error)
+	FindZoneData(userId string, warehouseId, zoneId int) (*domain.Zone, error)
+	DeleteZoneData(userId string, warehouseId, zoneId int) error
+}
+
+type ZonePostgresRepository struct {
 	db     database.Database
 	logger slog.Logger
 }
 
-func NewZoneRepository(db database.Database, logger slog.Logger) *zonePostgresRepository {
-	return &zonePostgresRepository{
+func NewZoneRepository(db database.Database, logger slog.Logger) *ZonePostgresRepository {
+	return &ZonePostgresRepository{
 		db:     db,
 		logger: logger,
 	}
 }
 
-func (wr *zonePostgresRepository) InsertZoneData(zone *domain.Zone, userId string) error {
+func (wr *ZonePostgresRepository) InsertZoneData(zone *domain.Zone, userId string) error {
 	var count int64
 	wr.db.GetDb().Model(domain.WareHouse{}).Where("id = ? AND uuid_user = ?", zone.WarehouseId, userId).Count(&count)
 	if count != 1 {
@@ -35,7 +43,7 @@ func (wr *zonePostgresRepository) InsertZoneData(zone *domain.Zone, userId strin
 	return nil
 }
 
-func (wr *zonePostgresRepository) UpdateZoneData(zone *domain.Zone, userId string) error {
+func (wr *ZonePostgresRepository) UpdateZoneData(zone *domain.Zone, userId string) error {
 
 	var count int64
 	wr.db.GetDb().Model(domain.WareHouse{}).Where("id = ? AND uuid_user = ?", zone.WarehouseId, userId).Count(&count)
@@ -51,7 +59,7 @@ func (wr *zonePostgresRepository) UpdateZoneData(zone *domain.Zone, userId strin
 	return nil
 }
 
-func (wr *zonePostgresRepository) FindAllZoneData(userId string, warehouseId int) (*[]domain.Zone, error) {
+func (wr *ZonePostgresRepository) FindAllZoneData(userId string, warehouseId int) (*[]domain.Zone, error) {
 	var zones []domain.Zone
 	var countWarehouse int64
 
@@ -68,7 +76,7 @@ func (wr *zonePostgresRepository) FindAllZoneData(userId string, warehouseId int
 	return &zones, nil
 }
 
-func (wr *zonePostgresRepository) FindZoneData(userId string, warehouseId, zoneId int) (*domain.Zone, error) {
+func (wr *ZonePostgresRepository) FindZoneData(userId string, warehouseId, zoneId int) (*domain.Zone, error) {
 	var zones domain.Zone
 	var countWarehouse int64
 
@@ -85,7 +93,7 @@ func (wr *zonePostgresRepository) FindZoneData(userId string, warehouseId, zoneI
 	return &zones, nil
 }
 
-func (wr *zonePostgresRepository) DeleteZoneData(userId string, warehouseId, zoneId int) error {
+func (wr *ZonePostgresRepository) DeleteZoneData(userId string, warehouseId, zoneId int) error {
 	var zone domain.Zone
 	var countWarehouse int64
 

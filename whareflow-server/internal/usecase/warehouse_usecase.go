@@ -9,9 +9,9 @@ import (
 type WarehouseUsecase interface {
 	CreateWarehouse(in delivery.WarehouseModelRequest, userId string) error
 	GetAllWarehouse(userId string) ([]delivery.WarehouseModelResponse, error)
-	GetWarehouse(userId, name string) (*delivery.WarehouseModelResponse, error)
-	UpdateWarehouse(in delivery.WarehouseModelRequest, warehouseName, userId string) error
-	DeleteWarehouse(warehouseName, userId string) error
+	GetWarehouse(userId string, id uint) (*delivery.WarehouseModelResponse, error)
+	UpdateWarehouse(in delivery.WarehouseModelRequest, id uint, userId string) error
+	DeleteWarehouse(id uint, userId string) error
 }
 
 type IWarehouseUsecase struct {
@@ -61,9 +61,9 @@ func (wu *IWarehouseUsecase) GetAllWarehouse(userId string) ([]delivery.Warehous
 	return warehouses, nil
 }
 
-func (wu *IWarehouseUsecase) GetWarehouse(userId, name string) (*delivery.WarehouseModelResponse, error) {
+func (wu *IWarehouseUsecase) GetWarehouse(userId string, id uint) (*delivery.WarehouseModelResponse, error) {
 
-	warehouseRepo, err := wu.warehouseRepo.FindWareHouseData(userId, name)
+	warehouseRepo, err := wu.warehouseRepo.FindWareHouseData(userId, id)
 	if err != nil {
 		return nil, err
 	}
@@ -75,14 +75,14 @@ func (wu *IWarehouseUsecase) GetWarehouse(userId, name string) (*delivery.Wareho
 	}, nil
 }
 
-func (wu *IWarehouseUsecase) UpdateWarehouse(in delivery.WarehouseModelRequest, warehouseName, userId string) error {
+func (wu *IWarehouseUsecase) UpdateWarehouse(in delivery.WarehouseModelRequest, id uint, userId string) error {
 	wh := domain.WareHouse{
 		UuidUser: userId,
 		Address:  in.Address,
 		Name:     in.Name,
 	}
 
-	err := wu.warehouseRepo.UpdateWareHouseData(&wh, warehouseName)
+	err := wu.warehouseRepo.UpdateWareHouseData(&wh, id)
 	if err != nil {
 		return err
 	}
@@ -90,9 +90,9 @@ func (wu *IWarehouseUsecase) UpdateWarehouse(in delivery.WarehouseModelRequest, 
 	return nil
 }
 
-func (wu *IWarehouseUsecase) DeleteWarehouse(warehouseName, userId string) error {
+func (wu *IWarehouseUsecase) DeleteWarehouse(id uint, userId string) error {
 
-	if err := wu.warehouseRepo.DeleteWareHouseData(userId, warehouseName); err != nil {
+	if err := wu.warehouseRepo.DeleteWareHouseData(userId, id); err != nil {
 		return err
 	}
 

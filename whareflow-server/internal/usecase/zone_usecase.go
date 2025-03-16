@@ -18,7 +18,7 @@ type IZoneUsecase struct {
 	zoneRepository repositories.ZoneRepository
 }
 
-func NewZoneUsecase(zoneRepo repositories.ZoneRepository) *IZoneUsecase {
+func NewIZoneUsecase(zoneRepo repositories.ZoneRepository) *IZoneUsecase {
 	return &IZoneUsecase{
 		zoneRepository: zoneRepo,
 	}

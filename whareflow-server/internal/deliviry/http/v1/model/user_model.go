@@ -20,7 +20,3 @@ type UserLoginByPhoneNumber struct {
 	PhoneNumber string `json:"phone_number"`
 	Password    string `json:"password"`
 }
-
-type UserRefreshTokens struct {
-	RefreshToken string `json:"refresh_token"`
-}

@@ -8,7 +8,7 @@ WORKDIR /wareflow-client
 COPY package*.json ./
 
 # Установка зависимостей
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 # Копирование исходного кода
 COPY . .
@@ -19,11 +19,11 @@ RUN npm run build
 # Стадия запуска
 FROM nginx:alpine
 
+# Открытие порта 8080 для контейнера
+EXPOSE 80
+
 # Копирование результатов сборки из builder-стадии в папку nginx
 COPY --from=builder /wareflow-client/dist /usr/share/nginx/html
 
-# Открытие порта 80
-EXPOSE 80
-
-# Запуск nginx
+# Запуск nginx с настройкой для порта 8080
 CMD ["nginx", "-g", "daemon off;"]

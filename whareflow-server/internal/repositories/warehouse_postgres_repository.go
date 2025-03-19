@@ -7,6 +7,7 @@ import (
 	"github.com/Miroslovelife/whareflow/pkg/database"
 	"gorm.io/gorm"
 	"log/slog"
+	"fmt"
 )
 
 type WareHouseRepository interface {
@@ -16,6 +17,8 @@ type WareHouseRepository interface {
 	FindAllWareHouseData(uuid string) (*[]domain.WareHouse, error)
 	FindWareHouseData(uuid string, id uint) (*domain.WareHouse, error)
 	FindWareHouseOwner(warehouseId uint) (*domain.WareHouse, error)
+	FindAllEmployers(warehouseId uint, ownerId string) (*[]domain.User, error)
+	FindWhsEmployers(employerId string) (*[]domain.WareHouse, error)
 }
 
 type WareHousePostgresRepository struct {
@@ -120,4 +123,46 @@ func (wr *WareHousePostgresRepository) FindWareHouseOwner(warehouseId uint) (*do
 	}
 
 	return &warehouse, nil
+}
+
+func (wr *WareHousePostgresRepository) FindAllEmployers(warehouseId uint, ownerId string) (*[]domain.User, error) {
+	var employers []domain.User
+
+    // Проверяем наличие склада
+    err := wr.db.GetDb().Model(&domain.WareHouse{}).
+        Where("id = ? AND uuid_user = ?", warehouseId, ownerId).
+        First(&domain.WareHouse{}).Error
+    if err != nil {
+        return nil, err
+    }
+
+    // Получаем уникальных пользователей
+   resultUsers := wr.db.GetDb().Model(&domain.User{}).
+       Joins("JOIN warehouse_user_roles ON users.uuid = warehouse_user_roles.user_id").
+       Where("warehouse_user_roles.ware_house_id = ?", warehouseId).
+       Group("users.uuid"). // Группируем по uuid, чтобы избежать дубликатов
+       Find(&employers).Error
+   if resultUsers != nil {
+       return nil, resultUsers
+   }
+
+    fmt.Println("dwada", employers)
+
+    return &employers, nil
+}
+
+func (wr *WareHousePostgresRepository) FindWhsEmployers(employerId string) (*[]domain.WareHouse, error) {
+	var warehouses []domain.WareHouse
+
+	err := wr.db.GetDb().
+				Model(&domain.WareHouse{}).
+				Joins("JOIN warehouse_user_roles ON ware_houses.id = warehouse_user_roles.ware_house_id").
+				Where("warehouse_user_roles.user_id = ?", employerId).
+				Group("ware_houses.id").
+				Find(&warehouses).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &warehouses, nil
 }

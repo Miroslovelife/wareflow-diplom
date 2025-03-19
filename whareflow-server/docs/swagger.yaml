@@ -1,4 +1,4 @@
-basePath: /api/v1/owner
+basePath: /api/v1/employer
 definitions:
   delivery.ProductModelRequest:
     properties:
@@ -7,6 +7,17 @@ definitions:
       description:
         type: string
       title:
+        type: string
+    type: object
+  delivery.RoleReq:
+    properties:
+      name:
+        type: string
+      permissions:
+        items:
+          type: integer
+        type: array
+      username:
         type: string
     type: object
   delivery.UserLoginByEmail:
@@ -34,6 +45,8 @@ definitions:
       password:
         type: string
       phone_number:
+        type: string
+      role:
         type: string
       surname:
         type: string
@@ -179,16 +192,16 @@ paths:
       summary: Регистрация пользователя
       tags:
       - auth
-  /warehouse:
+  /role:
     get:
       consumes:
       - application/json
-      description: Возвращает список всех складов пользователя
+      description: Возвращает все типы прав
       produces:
       - application/json
       responses:
         "200":
-          description: 'message: warehouse success created'
+          description: '[]delivery.PermissionResponse'
           schema:
             additionalProperties:
               type: string
@@ -207,7 +220,81 @@ paths:
             type: object
       security:
       - ApiKeyAuth: []
-      summary: Return warehouses list
+      summary: Получение всех типов прав
+      tags:
+      - roles
+  /role/{warehouse_id}:
+    post:
+      consumes:
+      - application/json
+      description: Выдает роль работнику
+      parameters:
+      - description: warehouse id
+        in: path
+        name: warehouse_id
+        required: true
+        type: integer
+      - description: Данные для роли
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/delivery.RoleReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'message: role success created for user'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: 'error: invalid request body'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: 'error: internal server error'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Выдача роли работнику
+      tags:
+      - roles
+  /warehouse:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает список всех складов до которых есть доступ у сотрудника
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '[]delivery.WarehouseModelResponse'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: 'error: invalid request body'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: 'error: internal server error'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get a list of warehouses that can be accessed
       tags:
       - warehouse
     post:
@@ -362,7 +449,44 @@ paths:
       summary: Создание склада
       tags:
       - warehouse
-  /warehouse/{warehouse_id}/product:
+  /warehouse/{warehouse_id}/employer:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает список всех работников склада
+      parameters:
+      - description: warehouse id
+        in: path
+        name: warehouse_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '[]delivery.Employer'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: 'error: invalid request body'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: 'error: internal server error'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Return warehouses employers
+      tags:
+      - warehouse
+  /warehouse/{warehouse_id}/product/{product_id}:
     get:
       consumes:
       - application/json
@@ -397,6 +521,53 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Получение всех товаров со склада
+      tags:
+      - product
+    put:
+      consumes:
+      - application/json
+      description: Обнвляет данные о продукте
+      parameters:
+      - description: warehouse id
+        in: path
+        name: warehouse_id
+        required: true
+        type: string
+      - description: warehouse id
+        in: path
+        name: product_id
+        required: true
+        type: string
+      - description: Данные для создания склада
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/delivery.ProductModelRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'message: product success updated'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: 'error: invalid request body'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: 'error: internal server error'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Обновление продукта
       tags:
       - product
   /warehouse/{warehouse_id}/zone:

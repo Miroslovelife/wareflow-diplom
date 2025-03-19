@@ -4,6 +4,7 @@ type ProductModelRequest struct {
 	Title       string `json:"title"`
 	Count       uint64 `json:"count"`
 	Description string `json:"description"`
+	ZoneId uint64 `json:"zone_id"`
 }
 
 type ProductModelResponse struct {

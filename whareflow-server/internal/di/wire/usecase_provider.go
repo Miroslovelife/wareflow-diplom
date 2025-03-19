@@ -37,12 +37,12 @@ func ProvideProductUsecase(repoProduct repositories.ProductRepository, qr qr.Gen
 	return usecase.NewIProductUsecase(repoProduct, qr, cfg)
 }
 
-func ProvidePermissionUsecase(repoPermission repositories.PermissionRepository, repoWarehouse repositories.WareHouseRepository) *usecase.IPermissionUsecase {
-	return usecase.NewIPermissionUsecase(repoPermission, repoWarehouse)
+func ProvidePermissionUsecase(repoUser repositories.UserRepository, repoPermission repositories.PermissionRepository, repoWarehouse repositories.WareHouseRepository) *usecase.IPermissionUsecase {
+	return usecase.NewIPermissionUsecase(repoUser, repoPermission, repoWarehouse)
 }
 
-func ProvideAuthUsecase(tokenManager services.TokenManager) *usecase.IAuthUsecase {
-	return usecase.NewIAuthUsecase(tokenManager)
+func ProvideAuthUsecase(repoUser repositories.UserRepository, tokenManager services.TokenManager) *usecase.IAuthUsecase {
+	return usecase.NewIAuthUsecase(repoUser, tokenManager)
 }
 
 var UsecaseProviderSet = wire.NewSet(

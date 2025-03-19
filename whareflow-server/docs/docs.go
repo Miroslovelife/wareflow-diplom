@@ -197,6 +197,122 @@ const docTemplate = `{
                 }
             }
         },
+        "/role": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Возвращает все типы прав",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "roles"
+                ],
+                "summary": "Получение всех типов прав",
+                "responses": {
+                    "200": {
+                        "description": "[]delivery.PermissionResponse",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "error: invalid request body",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "error: internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/role/{warehouse_id}": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Выдает роль работнику",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "roles"
+                ],
+                "summary": "Выдача роли работнику",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "warehouse id",
+                        "name": "warehouse_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Данные для роли",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/delivery.RoleReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "message: role success created for user",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "error: invalid request body",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "error: internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/warehouse": {
             "get": {
                 "security": [
@@ -204,7 +320,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Возвращает список всех складов пользователя",
+                "description": "Возвращает список всех складов до которых есть доступ у сотрудника",
                 "consumes": [
                     "application/json"
                 ],
@@ -214,10 +330,10 @@ const docTemplate = `{
                 "tags": [
                     "warehouse"
                 ],
-                "summary": "Return warehouses list",
+                "summary": "Get a list of warehouses that can be accessed",
                 "responses": {
                     "200": {
-                        "description": "message: warehouse success created",
+                        "description": "[]delivery.WarehouseModelResponse",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -483,7 +599,65 @@ const docTemplate = `{
                 }
             }
         },
-        "/warehouse/{warehouse_id}/product": {
+        "/warehouse/{warehouse_id}/employer": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Возвращает список всех работников склада",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "warehouse"
+                ],
+                "summary": "Return warehouses employers",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "warehouse id",
+                        "name": "warehouse_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "[]delivery.Employer",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "error: invalid request body",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "error: internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/warehouse/{warehouse_id}/product/{product_id}": {
             "get": {
                 "security": [
                     {
@@ -513,6 +687,78 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "[]delivery.ProductModelResponse",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "error: invalid request body",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "error: internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Обнвляет данные о продукте",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "product"
+                ],
+                "summary": "Обновление продукта",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "warehouse id",
+                        "name": "warehouse_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "warehouse id",
+                        "name": "product_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Данные для создания склада",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/delivery.ProductModelRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "message: product success updated",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -1089,6 +1335,23 @@ const docTemplate = `{
                 }
             }
         },
+        "delivery.RoleReq": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "delivery.UserLoginByEmail": {
             "type": "object",
             "properties": {
@@ -1127,6 +1390,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "phone_number": {
+                    "type": "string"
+                },
+                "role": {
                     "type": "string"
                 },
                 "surname": {
@@ -1173,7 +1439,7 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "localhost:8089",
-	BasePath:         "/api/v1/owner",
+	BasePath:         "/api/v1/employer",
 	Schemes:          []string{},
 	Title:            "WareFlow api",
 	Description:      "",

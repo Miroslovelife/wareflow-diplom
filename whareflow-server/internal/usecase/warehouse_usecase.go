@@ -12,6 +12,8 @@ type WarehouseUsecase interface {
 	GetWarehouse(userId string, id uint) (*delivery.WarehouseModelResponse, error)
 	UpdateWarehouse(in delivery.WarehouseModelRequest, id uint, userId string) error
 	DeleteWarehouse(id uint, userId string) error
+	GetAllEmployers(warehouseId uint, userId string) (*[]delivery.Employer, error)
+	GetWhsEmployer(employerId string) ([]delivery.WarehouseModelResponse, error)
 }
 
 type IWarehouseUsecase struct {
@@ -97,4 +99,49 @@ func (wu *IWarehouseUsecase) DeleteWarehouse(id uint, userId string) error {
 	}
 
 	return nil
+}
+
+func (wu *IWarehouseUsecase) GetAllEmployers(warehouseId uint, userId string) (*[]delivery.Employer, error) {
+	employers, err := wu.warehouseRepo.FindAllEmployers(warehouseId, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	var resEmployers []delivery.Employer
+
+	for _, employer := range *employers {
+		resEmployer := delivery.Employer{
+			PhoneNumber: employer.PhoneNumber,
+			Username:    employer.Username,
+			FirstName:   employer.FirstName,
+			LastName:    employer.LastName,
+			Surname:     employer.Surname,
+			Email:       employer.Email,
+		}
+
+		resEmployers = append(resEmployers, resEmployer)
+	}
+
+	return &resEmployers, nil
+}
+
+func (wu *IWarehouseUsecase) GetWhsEmployer(employerId string) ([]delivery.WarehouseModelResponse, error) {
+	warehousesRepo, err := wu.warehouseRepo.FindWhsEmployers(employerId)
+	if err != nil {
+		return nil, err
+	}
+
+	var warehouses []delivery.WarehouseModelResponse
+
+	for _, valueRepo := range *warehousesRepo {
+		warehouse := delivery.WarehouseModelResponse{
+			Id:      valueRepo.Id,
+			Address: valueRepo.Address,
+			Name:    valueRepo.Name,
+		}
+
+		warehouses = append(warehouses, warehouse)
+	}
+
+	return warehouses, nil
 }

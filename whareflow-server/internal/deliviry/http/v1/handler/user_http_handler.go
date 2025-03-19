@@ -55,6 +55,14 @@ func (h *IUserHttpHandler) Register(c echo.Context) error {
 		})
 	}
 
+    fmt.Println(reqBody.Role)
+
+	if reqBody.Role != "owner" && reqBody.Role != "employer" {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "invalid request body",
+		})
+	}
+
 	if err := h.userUseCase.Register(reqBody); err != nil {
 		if errors.Is(err, error_custom.ErrUserAlreadyExistsWithEmail) {
 			h.logger.Info("User already exists with email")

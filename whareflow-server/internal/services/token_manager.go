@@ -9,7 +9,7 @@ import (
 type TokenManager interface {
 	CreateToken(secret string, expiry int, args map[string]interface{}) (string, error)
 	IsAuthorized(requestToken, secret string) (bool, error)
-	ExtractUuidFromToken(requestToken, secret string) (string, error)
+	ExtractUsernameToken(requestToken, secret string) (string, error)
 }
 
 type TokenM struct {
@@ -63,7 +63,7 @@ func (ja *TokenM) IsAuthorized(requestToken, secret string) (bool, error) {
 	return true, nil
 }
 
-func (ja *TokenM) ExtractUuidFromToken(requestToken, secret string) (string, error) {
+func (ja *TokenM) ExtractUsernameToken(requestToken, secret string) (string, error) {
 	token, err := jwt.Parse(requestToken, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -81,7 +81,5 @@ func (ja *TokenM) ExtractUuidFromToken(requestToken, secret string) (string, err
 		return "", fmt.Errorf("invalid Token")
 	}
 
-	fmt.Println(claims)
-
-	return claims["userId"].(string), nil
+	return claims["username"].(string), nil
 }

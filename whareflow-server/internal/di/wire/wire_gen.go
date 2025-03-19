@@ -21,16 +21,18 @@ import (
 
 // Injectors from handler_provider.go:
 
-func InitializeHandlerProviderSet(logger slog.Logger, userUsecase usecase.UserUsecase, whUsecase usecase.WarehouseUsecase, zoneUsecase usecase.ZoneUsecase, productUsecase usecase.ProductUsecase, cfg config.Config) ProviderHandler {
+func InitializeHandlerProviderSet(logger slog.Logger, userUsecase usecase.UserUsecase, whUsecase usecase.WarehouseUsecase, zoneUsecase usecase.ZoneUsecase, productUsecase usecase.ProductUsecase, cfg config.Config, permUsecase usecase.PermissionUsecase) ProviderHandler {
 	iUserHttpHandler := ProvideUserHandler(logger, userUsecase, cfg)
 	iWareHouseHandler := ProvideWareHouseHandler(logger, whUsecase, cfg)
 	iZoneHandler := ProvideZoneHandler(logger, zoneUsecase, cfg)
 	iProductHandler := ProvideProductHandler(productUsecase, cfg)
+	iRoleHandler := ProvideRoleHandler(permUsecase)
 	providerHandler := ProviderHandler{
 		UserHandler:      iUserHttpHandler,
 		WareHouseHandler: iWareHouseHandler,
 		ZoneHandler:      iZoneHandler,
 		ProductHandler:   iProductHandler,
+		RoleHandler:      iRoleHandler,
 	}
 	return providerHandler
 }
@@ -88,8 +90,8 @@ func InitializeUsecaseProviderSet(repoUser repositories.UserRepository, password
 	iWarehouseUsecase := ProvideWarehouseUsecase(repoWarehouse)
 	iZoneUsecase := ProvideZoneUsecase(repoZone)
 	iProductUsecase := ProvideProductUsecase(repoProduct, qr2, cfg)
-	iPermissionUsecase := ProvidePermissionUsecase(repoPermission, repoWarehouse)
-	iAuthUsecase := ProvideAuthUsecase(tokenManager)
+	iPermissionUsecase := ProvidePermissionUsecase(repoUser, repoPermission, repoWarehouse)
+	iAuthUsecase := ProvideAuthUsecase(repoUser, tokenManager)
 	providerUsecase := ProviderUsecase{
 		UserUsecase:       iUserUsecase,
 		WareHouseUsecase:  iWarehouseUsecase,
@@ -108,6 +110,7 @@ type ProviderHandler struct {
 	WareHouseHandler *handler.IWareHouseHandler
 	ZoneHandler      *handler.IZoneHandler
 	ProductHandler   *handler.IProductHandler
+	RoleHandler      *handler.IRoleHandler
 }
 
 func ProvideUserHandler(logger slog.Logger, userUsecase usecase.UserUsecase, cfg config.Config) *handler.IUserHttpHandler {
@@ -126,12 +129,17 @@ func ProvideProductHandler(productUsecase usecase.ProductUsecase, cfg config.Con
 	return handler.NewIProductHandler(productUsecase)
 }
 
+func ProvideRoleHandler(permUsecase usecase.PermissionUsecase) *handler.IRoleHandler {
+	return handler.NewIRolehandler(permUsecase)
+}
+
 // RepositoryProviderSet for repo layer
 var HandlerProviderSet = wire.NewSet(
 	ProvideUserHandler,
 	ProvideWareHouseHandler,
 	ProvideZoneHandler,
-	ProvideProductHandler, wire.Struct(new(ProviderHandler), "UserHandler", "WareHouseHandler", "ZoneHandler", "ProductHandler"),
+	ProvideProductHandler,
+	ProvideRoleHandler, wire.Struct(new(ProviderHandler), "UserHandler", "WareHouseHandler", "ZoneHandler", "ProductHandler", "RoleHandler"),
 )
 
 // middleware_provider.go:
@@ -252,12 +260,12 @@ func ProvideProductUsecase(repoProduct repositories.ProductRepository, qr2 qr.Ge
 	return usecase.NewIProductUsecase(repoProduct, qr2, cfg)
 }
 
-func ProvidePermissionUsecase(repoPermission repositories.PermissionRepository, repoWarehouse repositories.WareHouseRepository) *usecase.IPermissionUsecase {
-	return usecase.NewIPermissionUsecase(repoPermission, repoWarehouse)
+func ProvidePermissionUsecase(repoUser repositories.UserRepository, repoPermission repositories.PermissionRepository, repoWarehouse repositories.WareHouseRepository) *usecase.IPermissionUsecase {
+	return usecase.NewIPermissionUsecase(repoUser, repoPermission, repoWarehouse)
 }
 
-func ProvideAuthUsecase(tokenManager services.TokenManager) *usecase.IAuthUsecase {
-	return usecase.NewIAuthUsecase(tokenManager)
+func ProvideAuthUsecase(repoUser repositories.UserRepository, tokenManager services.TokenManager) *usecase.IAuthUsecase {
+	return usecase.NewIAuthUsecase(repoUser, tokenManager)
 }
 
 var UsecaseProviderSet = wire.NewSet(

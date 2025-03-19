@@ -157,11 +157,11 @@ func (pr *ProductPostgresRepository) FindAllProductData(userId string) (*[]domai
 func (pr *ProductPostgresRepository) FindProductData(userId string, productId string) (*domain.Product, error) {
 	var product domain.Product
 
-	if err := pr.db.GetDb().Model(&domain.Product{}).Joins("JOIN zones ON products.zone_id = zones.id").
+	if err := pr.db.GetDb().Model(&domain.Product{}).Debug().Joins("JOIN zones ON products.zone_id = zones.id").
 		Joins("JOIN ware_houses ON zones.ware_house_id = ware_houses.id").
 		Where("ware_houses.uuid_user = ? AND products.uuid = ?", userId, productId).
-		Find(&product); err != nil {
-		return nil, err.Error
+		First(&product).Error; err != nil {
+		return nil, err
 	}
 
 	return &product, nil

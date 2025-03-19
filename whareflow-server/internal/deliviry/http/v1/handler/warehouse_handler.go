@@ -7,6 +7,7 @@ import (
 	custom_errors "github.com/Miroslovelife/whareflow/internal/errors"
 	"github.com/Miroslovelife/whareflow/internal/usecase"
 	"github.com/labstack/echo/v4"
+	"gorm.io/gorm"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -18,6 +19,8 @@ type WarehouseHandler interface {
 	CreateWarehouse(echo.Context) error
 	UpdateWarehouse(echo.Context) error
 	DeleteWarehouse(echo.Context) error
+	GetEmployers(echo.Context) error
+	GetWhsEmployer(c echo.Context) error
 }
 
 type IWareHouseHandler struct {
@@ -210,4 +213,59 @@ func (wh *IWareHouseHandler) DeleteWarehouse(c echo.Context) error {
 		"warehouses": fmt.Sprintf("warehouse success delete with name: %s", warehouseId),
 	})
 
+}
+
+// GetEmployers godoc
+// @Summary Return warehouses employers
+// @Description Возвращает список всех работников склада
+// @Tags warehouse
+// @Accept			json
+// @Produce		json
+// @Param			warehouse_id	path		int	true	"warehouse id"
+// @Success 200 {object} map[string]string "[]delivery.Employer"
+// @Failure 400 {object} map[string]string "error: invalid request body"
+// @Failure 500 {object} map[string]string "error: internal server error"
+// @Security ApiKeyAuth
+// @Router /warehouse/{warehouse_id}/employer [get]
+func (wh *IWareHouseHandler) GetEmployers(c echo.Context) error {
+	warehouseId, err := strconv.Atoi(c.Param("warehouse_id"))
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "Can't parse warehouse id")
+	}
+
+	userId := c.Get("x-user-id").(string)
+
+	employers, err := wh.whUsecase.GetAllEmployers(uint(warehouseId), userId)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return c.JSON(http.StatusForbidden, "You don't have permission on this warehouse")
+		}
+		return c.JSON(http.StatusInternalServerError, "Error when getting the list of employees")
+	}
+
+	return c.JSON(http.StatusOK, employers)
+}
+
+// GetWhsEmployer godoc
+// @Summary Get a list of warehouses that can be accessed
+// @Description Возвращает список всех складов до которых есть доступ у сотрудника
+// @Tags warehouse
+// @Accept			json
+// @Produce		json
+// @Success 200 {object} map[string]string "[]delivery.WarehouseModelResponse"
+// @Failure 400 {object} map[string]string "error: invalid request body"
+// @Failure 500 {object} map[string]string "error: internal server error"
+// @Security ApiKeyAuth
+// @Router /warehouse [get]
+func (wh *IWareHouseHandler) GetWhsEmployer(c echo.Context) error {
+	employerId := c.Get("x-user-id").(string)
+
+	warehouses, err := wh.whUsecase.GetWhsEmployer(employerId)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "Can't get warehouses")
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+    		"warehouses": warehouses,
+    	})
 }

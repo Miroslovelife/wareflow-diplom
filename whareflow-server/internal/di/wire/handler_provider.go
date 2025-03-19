@@ -16,6 +16,7 @@ type ProviderHandler struct {
 	WareHouseHandler *handler.IWareHouseHandler
 	ZoneHandler      *handler.IZoneHandler
 	ProductHandler   *handler.IProductHandler
+	RoleHandler      *handler.IRoleHandler
 }
 
 // Providers for repositories
@@ -36,16 +37,21 @@ func ProvideProductHandler(productUsecase usecase.ProductUsecase, cfg config.Con
 	return handler.NewIProductHandler(productUsecase)
 }
 
+func ProvideRoleHandler(permUsecase usecase.PermissionUsecase) *handler.IRoleHandler {
+	return handler.NewIRolehandler(permUsecase)
+}
+
 // RepositoryProviderSet for repo layer
 var HandlerProviderSet = wire.NewSet(
 	ProvideUserHandler,
 	ProvideWareHouseHandler,
 	ProvideZoneHandler,
 	ProvideProductHandler,
-	wire.Struct(new(ProviderHandler), "UserHandler", "WareHouseHandler", "ZoneHandler", "ProductHandler"),
+	ProvideRoleHandler,
+	wire.Struct(new(ProviderHandler), "UserHandler", "WareHouseHandler", "ZoneHandler", "ProductHandler", "RoleHandler"),
 )
 
-func InitializeHandlerProviderSet(logger slog.Logger, userUsecase usecase.UserUsecase, whUsecase usecase.WarehouseUsecase, zoneUsecase usecase.ZoneUsecase, productUsecase usecase.ProductUsecase, cfg config.Config) ProviderHandler {
+func InitializeHandlerProviderSet(logger slog.Logger, userUsecase usecase.UserUsecase, whUsecase usecase.WarehouseUsecase, zoneUsecase usecase.ZoneUsecase, productUsecase usecase.ProductUsecase, cfg config.Config, permUsecase usecase.PermissionUsecase) ProviderHandler {
 	wire.Build(HandlerProviderSet)
 	return ProviderHandler{}
 }

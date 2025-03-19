@@ -9,6 +9,7 @@ type UserReg struct {
 	Surname     string `json:"surname"`
 	Email       string `json:"email"`
 	Password    string `json:"password"`
+	Role        string `json:"role"`
 }
 
 type UserLoginByEmail struct {

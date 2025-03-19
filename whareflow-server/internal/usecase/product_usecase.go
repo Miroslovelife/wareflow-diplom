@@ -14,11 +14,8 @@ type ProductUsecase interface {
 	FindProduct(userId, productId string) (*delivery.ProductModelResponse, error)
 	FindAllProductFromZone(userId string, zoneId int) (*[]delivery.ProductModelResponse, error)
 	FindAllProductFromWarehouse(userId string, warehouseId int) (*[]delivery.ProductModelResponse, error)
-	//UpdateProduct(in *delivery.ProductModelRequest, userId string, warehouseId int) error
+	UpdateProduct(in *delivery.ProductModelRequest, warehouseId int, productId, userId string) error
 	//DeleteProduct(in *delivery.ProductModelRequest, userId string, warehouseId int) error
-
-	//FindAllProductFromWarehouse(userId string, warehouseId int) (*[]delivery.ProductModelResponse, error)
-	//FindAllProduct(userId string) (*[]delivery.ProductModelResponse, error)
 }
 
 type IProductUsecase struct {
@@ -75,16 +72,12 @@ func (pu *IProductUsecase) FindProduct(userId, productId string) (*delivery.Prod
 
 	fmt.Println(product)
 
-	qrDecode, err := pu.qrGenerator.DecodeToBase64(product.QrPath)
-	if err != nil {
-		return nil, err
-	}
 
 	productResponse := delivery.ProductModelResponse{
 		Uuid:        string(product.Uuid),
 		Title:       product.Title,
 		Count:       product.Count,
-		QrImage:     qrDecode,
+		QrImage:     product.QrPath,
 		Description: product.Description,
 		ZoneId:      product.ZoneId,
 	}
@@ -136,4 +129,28 @@ func (pu *IProductUsecase) FindAllProductFromWarehouse(userId string, warehouseI
 	}
 
 	return &productsRepo, nil
+}
+
+func (pu *IProductUsecase) UpdateProduct(in *delivery.ProductModelRequest, warehouseId int, productId, userId string) error {
+	product, err := pu.productRepository.FindProductData(userId, productId)
+	if err != nil {
+		return err
+	}
+
+	product = &domain.Product{
+		Uuid:        product.Uuid,
+		Title:       in.Title,
+		Count:       in.Count,
+		QrPath:      product.QrPath,
+		Description: in.Description,
+		ZoneId:      product.ZoneId,
+	}
+
+	errUpdate := pu.productRepository.UpdateProductData(product, userId, warehouseId)
+	if errUpdate != nil {
+		return err
+	}
+
+	return nil
+
 }

@@ -33,7 +33,7 @@ func (rm *RoleHttpMiddleware) IsOwner(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 
 		if !ok {
-			return echo.NewHTTPError(http.StatusUnauthorized, "You do not have admin role")
+			return echo.NewHTTPError(http.StatusUnauthorized, "You do not have owner role")
 		}
 
 		return next(c)
@@ -67,7 +67,7 @@ func (rm *RoleHttpMiddleware) IsEmployer(next echo.HandlerFunc) echo.HandlerFunc
 		}
 
 		if !ok {
-			return echo.NewHTTPError(http.StatusForbidden, "You do not have admin role")
+			return echo.NewHTTPError(http.StatusForbidden, "You do not have employer role")
 		}
 
 		return next(c)

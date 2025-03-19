@@ -57,5 +57,3 @@ func setupLogger(env string) *slog.Logger {
 
 	return log
 }
-
-//TODO: realize generic in repo layer

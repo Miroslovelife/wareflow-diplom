@@ -44,7 +44,7 @@ func (us *IUserUsecase) Register(in *delivery.UserReg) error {
 		Surname:     in.Surname,
 		Email:       in.Email,
 		Password:    hashedPassword,
-		Role:        "user",
+		Role:        in.Role,
 	}
 
 	if err := us.userRepository.InsertUserData(insertUserData); err != nil {
@@ -68,12 +68,12 @@ func (us *IUserUsecase) LoginByEmail(in *delivery.UserLoginByEmail, secretAccess
 	}
 
 	claimsAccess := map[string]interface{}{
-		"userId": string(userExist.Uuid),
-		"role":   userExist.Role,
+		"username": userExist.Username,
+		"role":     userExist.Role,
 	}
 
 	claimsRefresh := map[string]interface{}{
-		"userId": userExist.Uuid,
+		"username": userExist.Username,
 	}
 
 	accessToken, err := us.tokenManager.CreateToken(secretAccess, expiry, claimsAccess)
@@ -104,12 +104,12 @@ func (us *IUserUsecase) LoginByPhoneNumber(in *delivery.UserLoginByPhoneNumber, 
 	}
 
 	claimsAccess := map[string]interface{}{
-		"userId": string(userExist.Uuid),
-		"role":   userExist.Role,
+		"username": userExist.Username,
+		"role":     userExist.Role,
 	}
 
 	claimsRefresh := map[string]interface{}{
-		"userId": userExist.Uuid,
+		"username": userExist.Username,
 	}
 
 	accessToken, err := us.tokenManager.CreateToken(secretAccess, expiry, claimsAccess)
@@ -132,13 +132,13 @@ func (us *IUserUsecase) Refresh(refreshToken, secretAccess, secretRefresh string
 		return "", "", err
 	}
 
-	userId, err := us.tokenManager.ExtractUuidFromToken(refreshToken, secretRefresh)
+	username, err := us.tokenManager.ExtractUsernameToken(refreshToken, secretRefresh)
 	if err != nil {
 		return "", "", err
 	}
 
-    userData := map[string]interface{}{
-		"uuid": userId,
+	userData := map[string]interface{}{
+		"username": username,
 	}
 
 	userExist, err := us.userRepository.FindUserData(userData)
@@ -147,24 +147,23 @@ func (us *IUserUsecase) Refresh(refreshToken, secretAccess, secretRefresh string
 	}
 
 	claimsAccess := map[string]interface{}{
-    		"userId": string(userExist.Uuid),
-    		"role":   userExist.Role,
-    	}
+		"username": userExist.Username,
+		"role":     userExist.Role,
+	}
 
-    	claimsRefresh := map[string]interface{}{
-    		"userId": userExist.Uuid,
-    	}
+	claimsRefresh := map[string]interface{}{
+		"username": userExist.Username,
+	}
 
-    	newAccessToken, err := us.tokenManager.CreateToken(secretAccess, expAccess, claimsAccess)
-    	if err != nil {
-    		return "", "", err
-    	}
+	newAccessToken, err := us.tokenManager.CreateToken(secretAccess, expAccess, claimsAccess)
+	if err != nil {
+		return "", "", err
+	}
 
-    	newRefreshToken, err := us.tokenManager.CreateToken(secretRefresh, expRefresh, claimsRefresh)
-    	if err != nil {
-    		return "", "", err
-    	}
-
+	newRefreshToken, err := us.tokenManager.CreateToken(secretRefresh, expRefresh, claimsRefresh)
+	if err != nil {
+		return "", "", err
+	}
 
 	return newAccessToken, newRefreshToken, nil
 }
@@ -198,6 +197,7 @@ func (us *IUserUsecase) IsAdmin(userId string) (bool, error) {
 
 	return true, nil
 }
+
 func (us *IUserUsecase) IsEmployer(userId string) (bool, error) {
 	user, err := us.userRepository.FindUserData(map[string]interface{}{
 		"uuid": userId,

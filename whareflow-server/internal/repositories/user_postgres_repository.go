@@ -38,7 +38,7 @@ func (ur *UserPostgresRepository) InsertUserData(in *domain.User) error {
 		Surname:     in.Surname,
 		Email:       in.Email,
 		Password:    in.Password,
-		Role:        "user",
+		Role:        in.Role,
 	}
 
 	if err := ur.checkUserExistsWithEmail(data.Email); err != nil {
@@ -105,7 +105,7 @@ func (ur *UserPostgresRepository) FindUserData(filter map[string]interface{}) (*
 		return nil, fmt.Errorf("фильтр поиска не может быть пустым")
 	}
 
-	data := &domain.User{}
+	data := domain.User{}
 
 	db := ur.db.GetDb().Model(&domain.User{})
 
@@ -113,7 +113,7 @@ func (ur *UserPostgresRepository) FindUserData(filter map[string]interface{}) (*
 		db = db.Where(key+" = ?", value)
 	}
 
-	result := db.First(data)
+	result := db.First(&data)
 
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
@@ -124,27 +124,5 @@ func (ur *UserPostgresRepository) FindUserData(filter map[string]interface{}) (*
 	}
 
 	ur.logger.Info(fmt.Sprintf("найден пользователь: %v", filter))
-	return data, nil
+	return &data, nil
 }
-
-//func (ur *userPostgresRepository) CheckExistsUserData(filter map[string]interface{}) (bool, error) {
-//	if len(filter) == 0 {
-//		return false, fmt.Errorf("фильтр поиска не может быть пустым")
-//	}
-//
-//	db := ur.db.GetDb()
-//
-//	for key, value := range filter {
-//		db = db.Where(key+" = ?", value)
-//	}
-//
-//	var count int64
-//	result := db.Model(&domain.User{}).Limit(1).Count(&count)
-//
-//	if result.Error != nil {
-//		ur.logger.Error("ошибка при проверке существования данных", result.Error)
-//		return false, result.Error
-//	}
-//
-//	return count > 0, nil
-//}

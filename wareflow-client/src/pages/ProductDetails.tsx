@@ -1,113 +1,72 @@
-import { useState } from 'react';
-import { QRCodeSVG } from 'qrcode.react';
-import { Download, Search } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { api } from '../utils/api';
+import { useAuth } from "../contexts/AuthProvider.tsx";
 
-interface Product {
-  id: string;
-  name: string;
-  category: string;
-  quantity: number;
-  location: string;
+interface ProductDetail {
+  uuid: string;
+  title: string;
+  count: number;
+  qr_path: string;
+  description: string;
+  zone_id: number;
 }
 
-export default function Products() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+export default function ProductDetailPage() {
+  const { role, isAuthenticated } = useAuth();
+  const { productId } = useParams();  // Извлекаем ID товара из URL
+  const [product, setProduct] = useState<ProductDetail | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const products: Product[] = [
-    { id: '001', name: 'Товар A', category: 'Категория 1', quantity: 100, location: 'Зона A' },
-    { id: '002', name: 'Товар B', category: 'Категория 2', quantity: 75, location: 'Зона B' },
-    { id: '003', name: 'Товар C', category: 'Категория 1', quantity: 50, location: 'Зона C' },
-  ];
+  useEffect(() => {
+    const fetchProductDetail = async () => {
+      if (!productId) {
+        setError('Ошибка: не указан ID товара');
+        setIsLoading(false);
+        return;
+      }
 
-  const downloadQRCode = (productId: string) => {
-    const canvas = document.getElementById('qr-code') as HTMLCanvasElement;
-    if (canvas) {
-      const pngUrl = canvas
-        .toDataURL('image/png')
-        .replace('image/png', 'image/octet-stream');
-      const downloadLink = document.createElement('a');
-      downloadLink.href = pngUrl;
-      downloadLink.download = `product-${productId}.png`;
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      document.body.removeChild(downloadLink);
-    }
-  };
+      try {
+        const response = await api.get(`/api/v1/${role}/product/${productId}`);
+        setProduct(response.data);
+      } catch (err) {
+        setError('Ошибка загрузки данных о товаре');
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.category.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+    fetchProductDetail();
+  }, [productId]);
+
+  if (isLoading) return <div className="text-center py-6">Загрузка...</div>;
+  if (error) return <div className="text-center py-6 text-red-600">{error}</div>;
+
+  // Извлекаем имя файла без префикса './qr_storage/'
+  const imageFileName = product?.qr_path ? product.qr_path.replace('./qr_storage/', '') : '';
+  const imagePath = imageFileName ? `http://localhost:8089/qr_storage/${imageFileName}` : '';
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="mb-8">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Поиск товаров..."
-              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-          </div>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-bold mb-4">Список товаров</h2>
-            <div className="space-y-4">
-              {filteredProducts.map((product) => (
-                <div
-                  key={product.id}
-                  className="border rounded-lg p-4 cursor-pointer hover:bg-gray-50"
-                  onClick={() => setSelectedProduct(product)}
-                >
-                  <h3 className="font-semibold">{product.name}</h3>
-                  <p className="text-sm text-gray-600">Категория: {product.category}</p>
-                  <p className="text-sm text-gray-600">Количество: {product.quantity}</p>
-                  <p className="text-sm text-gray-600">Расположение: {product.location}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-bold mb-4">Информация о товаре</h2>
-            {selectedProduct ? (
-              <div>
-                <div className="mb-4">
-                  <h3 className="font-semibold text-lg mb-2">{selectedProduct.name}</h3>
-                  <p className="text-gray-600">ID: {selectedProduct.id}</p>
-                  <p className="text-gray-600">Категория: {selectedProduct.category}</p>
-                  <p className="text-gray-600">Количество: {selectedProduct.quantity}</p>
-                  <p className="text-gray-600">Расположение: {selectedProduct.location}</p>
-                </div>
-                <div className="flex flex-col items-center">
-                  <QRCodeSVG
-                    id="qr-code"
-                    value={JSON.stringify(selectedProduct)}
-                    size={200}
-                    level="H"
-                  />
-                  <button
-                    onClick={() => downloadQRCode(selectedProduct.id)}
-                    className="mt-4 flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-                  >
-                    <Download className="h-5 w-5 mr-2" />
-                    Скачать QR-код
-                  </button>
-                </div>
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-7xl mx-auto px-4">
+          {product ? (
+              <div className="bg-white p-6 rounded-lg shadow-lg">
+                <h2 className="text-3xl font-bold mb-4">{product.title}</h2>
+                <p className="text-gray-600">Описание: {product.description}</p>
+                <p className="text-gray-600">Количество: {product.count}</p>
+                <p className="text-gray-600">Зона ID: {product.zone_id}</p>
+                {imagePath && (
+                    <div className="mt-4">
+                      <img src={imagePath} alt="QR-код" />
+                    </div>
+                )}
               </div>
-            ) : (
-              <p className="text-gray-500 text-center">Выберите товар для просмотра информации</p>
-            )}
-          </div>
+          ) : (
+              <p className="text-center text-gray-600">Данные о товаре не найдены.</p>
+          )}
         </div>
       </div>
-    </div>
   );
 }

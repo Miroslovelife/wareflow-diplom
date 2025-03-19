@@ -1,8 +1,8 @@
 // src/hooks/useRole.ts
-import { useAuth } from './useAuth';
+import { useCheckAuth } from './useCheckAuth.tsx';
 
 export const useRole = () => {
-    const { state } = useAuth();
+    const { state } = useCheckAuth();
 
     const hasRole = (requiredRoles: string[]) => {
         if (!state.user) return false;
@@ -11,7 +11,8 @@ export const useRole = () => {
 
     return {
         isAdmin: () => hasRole(['admin']),
-        isModerator: () => hasRole(['moderator', 'admin']),
+        isOwner: () => hasRole(['owner']),
+        isEmployer: () => hasRole(['employer']),
         isAuthenticated: () => !!state.user
     };
 };

@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 export const api = axios.create({
-    baseURL: 'http://localhost:8089/',
+    baseURL: 'https://bebradomen.twc1.net:8443/',
     withCredentials: true,
 });
 

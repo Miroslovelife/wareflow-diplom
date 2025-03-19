@@ -19,34 +19,30 @@ export default function Warehouses() {
   const [newWarehouse, setNewWarehouse] = useState({ name: '', address: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-
   useEffect(() => {
     const fetchWarehouses = async () => {
-      console.log(isAuthenticated, isLoading, role);
       if (!isAuthenticated || !role) {
         setError('Ошибка: пользователь не авторизован или роль не определена.');
         setIsLoading(false);
         return;
       }
 
-      setIsLoading(true); // ✅ Правильно: устанавливаем перед началом запроса
-
+      setIsLoading(true);
       const endpoint = `/api/v1/${role}/warehouse`;
 
       try {
         const response = await api.get(endpoint);
-        setWarehouses(response.data.warehouses);
+        setWarehouses(response.data.warehouses || []);
       } catch (err) {
         setError('Ошибка загрузки складов');
         console.error(err);
       } finally {
-        setIsLoading(false); // ✅ Устанавливаем в false после завершения
+        setIsLoading(false);
       }
     };
 
     fetchWarehouses();
-  }, [role, isAuthenticated]); // ✅ Убрали isLoading, чтобы избежать бесконечного ререндера
-
+  }, [role, isAuthenticated]);
 
   const handleCreateWarehouse = async () => {
     if (!newWarehouse.name.trim() || !newWarehouse.address.trim()) {
@@ -58,9 +54,9 @@ export default function Warehouses() {
 
     try {
       const response = await api.post(`/api/v1/${role}/warehouse`, newWarehouse);
-      setWarehouses([...warehouses, response.data]); // Добавляем новый склад в список
+      setWarehouses([...warehouses, response.data]);
       setIsModalOpen(false);
-      setNewWarehouse({ name: '', address: '' }); // Очищаем форму
+      setNewWarehouse({ name: '', address: '' });
     } catch (err) {
       console.error('Ошибка при создании склада:', err);
       alert('Не удалось создать склад.');
@@ -88,26 +84,35 @@ export default function Warehouses() {
           </div>
 
           <div className="grid md:grid-cols-2 gap-6">
-            {warehouses.map((warehouse) => (
-                <div key={warehouse.id} className="bg-white rounded-lg shadow-md p-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-xl font-semibold">{warehouse.name ? warehouse.name.trim() : 'Без названия'}</h3>
-                    <Link
-                        to={`/warehouses/${encodeURIComponent(warehouse.id)}`}
-                        className="text-indigo-600 hover:text-indigo-800 flex items-center"
-                    >
-                      Подробнее <ArrowRight className="h-4 w-4 ml-1" />
-                    </Link>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <Package className="h-8 w-8 text-indigo-600" />
-                    <div>
-                      <p className="text-sm text-gray-600">Адрес: {warehouse.address ? warehouse.address.trim() : 'Не указан'}</p>
-                    </div>
-                  </div>
+            {warehouses.length === 0 ? (
+                <div className="col-span-2 text-center text-gray-600">
+                  Нет доступных складов.
                 </div>
-            ))}
-
+            ) : (
+                warehouses.map((warehouse) => (
+                    <div key={warehouse.id} className="bg-white rounded-lg shadow-md p-6">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-xl font-semibold">
+                          {warehouse.name ? warehouse.name.trim() : 'Без названия'}
+                        </h3>
+                        <Link
+                            to={`/warehouses/${encodeURIComponent(warehouse.id)}`}
+                            className="text-indigo-600 hover:text-indigo-800 flex items-center"
+                        >
+                          Подробнее <ArrowRight className="h-4 w-4 ml-1" />
+                        </Link>
+                      </div>
+                      <div className="flex items-center space-x-4">
+                        <Package className="h-8 w-8 text-indigo-600" />
+                        <div>
+                          <p className="text-sm text-gray-600">
+                            Адрес: {warehouse.address ? warehouse.address.trim() : 'Не указан'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                ))
+            )}
           </div>
         </div>
 

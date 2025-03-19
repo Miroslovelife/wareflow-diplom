@@ -61,7 +61,7 @@ func (s *echoServer) Start() {
 
 	s.app.Use(middleware.CORSWithConfig(
 		middleware.CORSConfig{
-			AllowOrigins:     []string{"http://127.0.0.1", "http://localhost"},
+			AllowOrigins:     []string{"https://bebradomen.twc1.net:8443", "http://localhost:5173"},
 			AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 			AllowHeaders:     []string{"Authorization", "Content-Type"},
 			AllowCredentials: true,

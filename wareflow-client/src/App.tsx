@@ -53,6 +53,14 @@ function App() {
                         }
                     />
                     <Route
+                        path="warehouses/:warehouseId/zones/:zoneId" // <-- Добавлен маршрут для отдельного склада
+                        element={
+                            <ProtectedRoute>
+                                <ZoneDetails />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
                         path="/scanner" // <-- Добавлен маршрут для отдельного склада
                         element={
                             <ProtectedRoute>
@@ -69,7 +77,7 @@ function App() {
                         }
                     />
                     <Route
-                        path="/products/:productId" // <-- Добавлен маршрут для отдельного склада
+                        path="/:zoneId/:warehouseId/products/:productId" // <-- Добавлен маршрут для отдельного склада
                         element={
                             <ProtectedRoute>
                                 <ProductDetails />

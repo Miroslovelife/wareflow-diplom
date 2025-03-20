@@ -12,6 +12,12 @@ interface Employer {
     surname: string;
     email: string;
 }
+interface Warehouse {
+    id: number;
+    name: string;
+    address: string;
+}
+
 
 export default function WarehouseEmployees() {
     const { role, isAuthenticated } = useAuth();
@@ -25,7 +31,7 @@ export default function WarehouseEmployees() {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editRoleName, setEditRoleName] = useState('');
     const { warehouseId } = useParams();
-
+    const [ warehouse, setWarehouse] = useState<Warehouse[]>([]);
     // Получение прав для системы
     useEffect(() => {
         const fetchPermissions = async () => {
@@ -42,9 +48,10 @@ export default function WarehouseEmployees() {
         fetchPermissions();
     }, [isAuthenticated, role]);
 
-    // Получение списка сотрудников
+
     useEffect(() => {
         fetchEmployees();
+        getWH();
     }, []);
 
     const fetchEmployees = async () => {
@@ -61,7 +68,21 @@ export default function WarehouseEmployees() {
         setLoading(false);
     };
 
-    // Добавить нового сотрудника
+
+    const getWH = async () => {
+
+        try {
+            const endpoint = role === 'owner'
+                ? `/api/v1/${role}/warehouse/${warehouseId}`
+                : `/api/v1/${role}/global/${warehouseId}/warehouse_manage`;
+
+            const response =  await api.get(endpoint);
+            setWarehouse(response.data) // Обновляем список сотрудников
+        } catch (error) {
+            console.error('Ошибка при добавлении сотрудника:', error);
+        }
+    };
+
     const addEmployee = async () => {
         if (!newEmployeeUsername || !roleName || selectedPermissions.length === 0) return;
 
@@ -121,12 +142,12 @@ export default function WarehouseEmployees() {
 
     return (
         <div className="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg">
-            <h2 className="text-2xl font-semibold mb-4">Управление сотрудниками склада</h2>
+            <h2 className="text-2xl font-semibold mb-4">Управление сотрудниками склада {warehouse.name}</h2>
 
             {/* Кнопка для открытия модального окна добавления сотрудника */}
             <button
                 onClick={toggleModal}
-                className="bg-green-500 text-white px-4 py-2 rounded flex items-center mb-6"
+                className="flex items-center bg-indigo-600 text-white px-4 py-2 rounded-lg shadow hover:bg-indigo-700 mb-6"
             >
                 <UserPlus className="h-5 w-5 mr-2" /> Добавить сотрудника
             </button>
@@ -158,7 +179,12 @@ export default function WarehouseEmployees() {
 
                         <div className="mb-4">
                             <h4 className="font-semibold">Разрешения</h4>
-                            {systemPermissions.map((permission) => (
+
+                            {systemPermissions.length === 0 ? (
+                                    <div className="col-span-2 text-center text-gray-600">
+                                        Ошибка при загрузки системных прав.
+                                    </div>) : (
+                                systemPermissions.map((permission) => (
                                 <label key={permission.id} className="block">
                                     <input
                                         type="checkbox"
@@ -178,7 +204,7 @@ export default function WarehouseEmployees() {
                                     />
                                     {permission.name}
                                 </label>
-                            ))}
+                            )))}
                         </div>
 
                         <div className="flex justify-end">
@@ -248,7 +274,12 @@ export default function WarehouseEmployees() {
                     </tr>
                     </thead>
                     <tbody>
-                    {employees.map((employee) => (
+                    {
+                        employees === null ? (
+                                <div className="col-span-2 text-gray-600 flex justify-center">
+                                    Сотрудников на складе нет.
+                                </div>) : (
+                        employees.map((employee) => (
                         <tr key={employee.username} className="text-center">
                             <td className="border p-2">{employee.first_name} {employee.last_name}</td>
                             <td className="border p-2">{employee.username}</td>
@@ -269,7 +300,7 @@ export default function WarehouseEmployees() {
                                 </button>
                             </td>
                         </tr>
-                    ))}
+                    )))}
                     </tbody>
                 </table>
             )}

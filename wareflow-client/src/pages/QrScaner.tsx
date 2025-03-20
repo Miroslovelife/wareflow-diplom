@@ -1,37 +1,44 @@
-import { Html5QrcodeScanner } from 'html5-qrcode';
-import { useEffect, useState } from 'react';
+import { Html5QrcodeScanner, Html5QrcodeScanType } from 'html5-qrcode';
+import { useEffect, useRef, useState } from 'react';
 
 export const Scanner: React.FC = () => {
     const [scanResult, setScanResult] = useState<string | null>(null);
-    const [scanner, setScanner] = useState<Html5QrcodeScanner | null>(null);
+    const scannerRef = useRef<Html5QrcodeScanner | null>(null); // Используем useRef для хранения сканера
 
     useEffect(() => {
-        // Инициализируем сканер при монтировании компонента
-        const newScanner = new Html5QrcodeScanner('reader', { fps: 10, qrbox: 350 });
+        if (!scannerRef.current) { // Проверяем, не был ли сканер уже создан
+            scannerRef.current = new Html5QrcodeScanner(
+                'reader',
+                {
+                    fps: 10,
+                    qrbox: { width: 240, height: 240 },
+                    rememberLastUsedCamera: true,
+                    supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
+                },
+                false
+            );
 
-        newScanner.render(
-            (decodedText) => {
-                setScanResult(decodedText);
-                newScanner.clear();
+            scannerRef.current.render(
+                (decodedText) => {
+                    setScanResult(decodedText);
+                    scannerRef.current?.clear();
 
-                // Проверяем, является ли результат ссылкой
-                if (isValidURL(decodedText)) {
-                    window.location.href = decodedText; // Автоматический переход
-                }
-            },
-            (errorMessage) => console.warn(errorMessage)
-        );
-        setScanner(newScanner);
+                    if (isValidURL(decodedText)) {
+                        window.location.href = decodedText;
+                    }
+                },
+                (errorMessage) => console.warn(errorMessage)
+            );
+        }
 
-        // Очищаем сканер при размонтировании компонента
         return () => {
-            newScanner.clear();
-            setScanner(null); // Обнуляем сканер, чтобы избежать попыток доступа к нему после размонтирования
+            scannerRef.current?.clear();
+            scannerRef.current = null; // Очищаем референс, чтобы избежать повторного создания
         };
-    }, []); // Эффект запускается только один раз при монтировании компонента
+    }, []);
 
     const restartScan = () => {
-        setScanResult(null); // Сброс результата
+        setScanResult(null);
     };
 
     const isValidURL = (text: string) => {
@@ -47,7 +54,7 @@ export const Scanner: React.FC = () => {
         <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-6">
             <h1 className="text-3xl font-bold mb-6">QR Сканер</h1>
 
-            <div className="w-96 h-96 bg-white shadow-lg rounded-lg flex items-center justify-center relative">
+            <div className="w-[17rem] h-[17rem] bg-white shadow-lg rounded-lg flex items-center justify-center relative">
                 {!scanResult ? (
                     <div id="reader" className="w-full h-full absolute"></div>
                 ) : (

@@ -49,7 +49,7 @@ export default function Warehouses() {
       alert('Введите имя и адрес склада.');
       return;
     }
-
+    console.log('Создаваемый склад:', newWarehouse);
     setIsSubmitting(true);
 
     try {
@@ -62,6 +62,18 @@ export default function Warehouses() {
       alert('Не удалось создать склад.');
     } finally {
       setIsSubmitting(false);
+    }
+
+    const endpoint = `/api/v1/${role}/warehouse`;
+
+    try {
+      const response = await api.get(endpoint);
+      setWarehouses(response.data.warehouses || []);
+    } catch (err) {
+      setError('Ошибка загрузки складов');
+      console.error(err);
+    } finally {
+      setIsLoading(false);
     }
   };
 

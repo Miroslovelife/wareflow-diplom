@@ -13,7 +13,9 @@ interface ProductDetail {
 }
 
 export default function ProductDetailPage() {
-  const { role, isAuthenticated } = useAuth();
+  const { role, permissions, isAuthenticated, getPermissionsForWarehouse, username} = useAuth();
+  const { warehouseId } = useParams();
+  const { zoneId } = useParams();
   const { productId } = useParams();  // Извлекаем ID товара из URL
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -28,14 +30,26 @@ export default function ProductDetailPage() {
       }
 
       try {
-        const response = await api.get(`/api/v1/${role}/product/${productId}`);
-        setProduct(response.data);
-      } catch (err) {
-        setError('Ошибка загрузки данных о товаре');
-        console.error(err);
-      } finally {
-        setIsLoading(false);
-      }
+        if (role === 'employer' && permissions.length === 0) {
+          await getPermissionsForWarehouse(warehouseId, username);
+        }
+
+        if (role === 'owner' || permissions.some(permission => permission.name === 'product_manage')) {
+          const response = await api.get(
+              role === 'employer'
+                  ? `/api/v1/${role}/warehouse/${warehouseId}/zone/${zoneId}/product/product_manage/${productId}`
+                  : `/api/v1/${role}/warehouse/${warehouseId}/zone/${zoneId}/product/${productId}`
+          );
+          setProduct(response.data);
+        }
+        }catch (err) {
+          setError('Ошибка загрузки данных о товаре');
+          console.error(err);
+        } finally {
+          setIsLoading(false);
+        }
+
+
     };
 
     fetchProductDetail();

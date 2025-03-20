@@ -117,7 +117,6 @@ export default function ProductManage() {
 
             if (!selectedWarehouse) return;
 
-
             try {
                 if (role === 'employer' && permissions.length === 0) {
                     await getPermissionsForWarehouse(warehouseId, username);
@@ -207,24 +206,25 @@ export default function ProductManage() {
     };
 
     return (
-        <div className="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg">
+        <div className="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg mt-10">
             <h2 className="text-2xl font-semibold mb-4">Управление товарами</h2>
 
             {/* Кнопка для открытия модального окна добавления продукта */}
             {(role === 'owner' || permissions.some(permission => permission.name === 'product_manage')) && (
                 <button
                     onClick={toggleModal}
-                    className="bg-green-500 text-white px-4 py-2 rounded flex items-center mb-6"
+                    className="flex items-center bg-indigo-600 text-white px-4 py-2 rounded-lg shadow hover:bg-indigo-700 mb-6"
                 >
-                    <PlusCircle className="h-5 w-5 mr-2" /> Добавить продукт
+                    <PlusCircle className="h-5 w-5 mr-2" /> Добавить товар
                 </button>
             )}
 
             {/* Модальное окно для добавления продукта */}
+
             {isModalOpen && (
                 <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50">
                     <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-                        <h3 className="text-xl font-semibold mb-4">Добавить продукт</h3>
+                        <h3 className="text-xl font-semibold mb-4">Добавить товар</h3>
 
                         <div className="mb-4">
                             <select
@@ -233,9 +233,12 @@ export default function ProductManage() {
                                 className="border p-2 rounded w-full"
                             >
                                 <option value="">Выберите склад</option>
-                                {warehouses.map((warehouse) => (
+                                {warehouses.length === 0 ?  (
+                                    <p value="" >
+                                        Нет доступных складов.
+                                    </p>) : (warehouses.map((warehouse) => (
                                     <option key={warehouse.id} value={warehouse.id}>{warehouse.name}</option>
-                                ))}
+                                )))}
                             </select>
                         </div>
                         <div className="mb-4">
@@ -245,9 +248,13 @@ export default function ProductManage() {
                                 className="border p-2 rounded w-full"
                             >
                                 <option value="">Выберите зону</option>
-                                {zones.map((zone) => (
+                                {zones === null ?  (
+                                    <p value="" >
+                                        Нет доступных зон.
+                                    </p>
+                                ) : ( (zones.map((zone) => (
                                     <option key={zone.id} value={zone.id}>{zone.name}</option>
-                                ))}
+                                ))))}
                             </select>
                         </div>
                         <div className="mb-4">
@@ -268,6 +275,7 @@ export default function ProductManage() {
                             />
                         </div>
                         <div className="mb-4">
+                            Количество
                             <input
                                 type="number"
                                 placeholder="Количество"
@@ -350,7 +358,12 @@ export default function ProductManage() {
                 </tr>
                 </thead>
                 <tbody>
-                {products.map((product) => (
+                {products === null ? (
+                    <div className="col-span-2 text-center text-gray-600">
+                        Товаров пока нет.
+                    </div>
+                ) : (
+                    products.map((product) => (
                     <tr key={product.uuid} className="text-center">
                         <td className="border p-2">
                             <Link to={`/products/${product.uuid}`} zones={zones} className="text-indigo-600">{product.title}</Link>
@@ -376,7 +389,7 @@ export default function ProductManage() {
                             )}
                         </td>
                     </tr>
-                ))}
+                )))}
                 </tbody>
             </table>
         </div>

@@ -137,7 +137,7 @@ func (ph *IProductHandler) GetAllProductsFromZone(c echo.Context) error {
 // @Security		ApiKeyAuth
 // @Router /warehouse/{warehouse_id}/product/{product_id}  [get]
 func (ph *IProductHandler) GetAllProductsFromWarehouse(c echo.Context) error {
-	fmt.Println(c.Get("x-user-id"))
+
 	userId := c.Get("x-user-id").(string)
 
 	warehouseId, err := strconv.Atoi(c.Param("warehouse_id"))

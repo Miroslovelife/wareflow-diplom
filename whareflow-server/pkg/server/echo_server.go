@@ -233,13 +233,13 @@ func (s *echoServer) InitEmployerRoutes(group *echo.Group, delivery *DeliveryLay
 		delivery.permissionMiddleware.SetGroup("product"),
 		delivery.permissionMiddleware.HasPermissionOnWarehouse)
 	productZoneRouters.GET("/:product_id", delivery.productHandlers.GetProduct) // Получение информации о продукте
-
+    productZoneRouters.GET("", delivery.productHandlers.GetAllProductsFromZone)
 	// Продукты на складе
 	productWarehouseRouters := warehouseRouters.Group("/:warehouse_id/product/:action",
 		delivery.permissionMiddleware.SetGroup("product"),
 		delivery.permissionMiddleware.HasPermissionOnWarehouse)
 	productWarehouseRouters.GET("", delivery.productHandlers.GetAllProductsFromWarehouse) // Получение всех продуктов на складе
 	productWarehouseRouters.PUT("/:product_id", delivery.productHandlers.UpdateProduct)   // Обновление продукта на складе
-	productWarehouseRouters.GET("", delivery.productHandlers.GetAllProductsFromZone)      // Создание нового продукта
+	      // Создание нового продукта
 
 }

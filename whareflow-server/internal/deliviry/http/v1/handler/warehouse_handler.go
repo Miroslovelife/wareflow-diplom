@@ -107,7 +107,7 @@ func (wh *IWareHouseHandler) CreateWarehouse(c echo.Context) error {
 	reqBody := delivery.WarehouseModelRequest{}
 
 	if err := c.Bind(&reqBody); err != nil {
-		wh.logger.Error(fmt.Sprintf("Incorrect request body: %v", err))
+
 		return c.JSON(http.StatusBadRequest, map[string]string{
 			"error": "invalid request body",
 		})

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Warehouse, Home, LogIn, UserPlus, User, LogOut, Package, Menu, X, QrCode } from 'lucide-react';  // Добавил иконку QrCode
+import { Warehouse, Home, LogIn, UserPlus, User, LogOut, Package, Menu, X, QrCode } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthProvider';
 
@@ -33,23 +33,23 @@ export default function Navbar() {
                     {/* Логотип */}
                     <Link to="/" className="flex items-center space-x-2 font-bold text-xl">
                         <Warehouse className="h-6 w-6" />
-                        <span>WareFlow</span>
+                        <span>Ware¯\_(ツ)_/¯Flow</span>
                     </Link>
 
                     {/* Бургер меню для маленьких экранов */}
                     {isAuthenticated ? (
-                    <div className="block lg:hidden">
-                        <button
-                            className="flex items-center text-white"
-                            onClick={() => setBurgerMenuOpen(!burgerMenuOpen)}
-                        >
-                            {burgerMenuOpen ? (
-                                <X className="h-6 w-6" />
-                            ) : (
-                                <Menu className="h-6 w-6" />
-                            )}
-                        </button>
-                    </div>) : null}
+                        <div className="block lg:hidden">
+                            <button
+                                className="flex items-center text-white"
+                                onClick={() => setBurgerMenuOpen(!burgerMenuOpen)}
+                            >
+                                {burgerMenuOpen ? (
+                                    <X className="h-6 w-6" />
+                                ) : (
+                                    <Menu className="h-6 w-6" />
+                                )}
+                            </button>
+                        </div>) : null}
 
                     {/* Навигация для авторизованных пользователей */}
                     {isAuthenticated ? (
@@ -85,7 +85,7 @@ export default function Navbar() {
                                 </button>
 
                                 {menuOpen && (
-                                    <div className="absolute right-0 mt-2 w-40 bg-white text-black rounded-md shadow-lg">
+                                    <div className="absolute right-0 mt-2 w-40 bg-white text-black rounded-md shadow-lg z-50">
                                         <Link to="/profile" className="block px-4 py-2 hover:bg-gray-100">
                                             {username}
                                         </Link>

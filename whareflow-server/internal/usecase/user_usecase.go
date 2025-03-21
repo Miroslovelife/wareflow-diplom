@@ -16,6 +16,7 @@ type UserUsecase interface {
 	IsAdmin(userId string) (bool, error)
 	IsOwner(userId string) (bool, error)
 	IsEmployer(userId string) (bool, error)
+	GetProfile(userId string) (*delivery.UserReg, error)
 }
 
 type IUserUsecase struct {
@@ -211,4 +212,29 @@ func (us *IUserUsecase) IsEmployer(userId string) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func (us *IUserUsecase) GetProfile(userId string) (*delivery.UserReg, error) {
+	var profile delivery.UserReg
+
+	data := map[string]interface{}{
+		"uuid": userId,
+	}
+
+	profileRepo, err := us.userRepository.FindUserData(data)
+	if err != nil {
+		return nil, err
+	}
+
+	profile = delivery.UserReg{
+		PhoneNumber: profileRepo.PhoneNumber,
+		Username:    profileRepo.Username,
+		FirstName:   profileRepo.FirstName,
+		LastName:    profileRepo.LastName,
+		Surname:     profileRepo.Surname,
+		Email:       profileRepo.Email,
+		Role:        profileRepo.Role,
+	}
+
+	return &profile, nil
 }

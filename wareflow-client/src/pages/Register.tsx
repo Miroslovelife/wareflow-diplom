@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import {useEffect, useState} from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -41,6 +41,18 @@ export default function Register() {
         resolver: yupResolver(schema),
     });
 
+    useEffect(() => {
+        const script = document.createElement("script");
+        script.src = "../../app.js"; // Путь к файлу app.js
+        script.async = true;
+
+        document.body.appendChild(script);
+
+        return () => {
+            document.body.removeChild(script);
+        };
+    }, []);
+
     // ✅ Функция отправки данных на сервер
     const onSubmit = async (data: RegisterForm) => {
         setLoading(true);
@@ -78,79 +90,86 @@ export default function Register() {
 
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
-            <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-                <h2 className="text-2xl font-bold mb-6 text-center">Регистрация</h2>
+        <div className="relative">
+            <div id="particles-js" className="absolute top-0 left-0 w-full h-full z-0"/>
+            <div className="min-h-screen flex items-center justify-center bg-gray-100">
+                <div className="relative bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+                    <h2 className="text-2xl font-bold mb-6 text-center">Регистрация</h2>
 
-                {error && <p className="text-red-600 text-center mb-4">{error}</p>}
+                    {error && <p className="text-red-600 text-center mb-4">{error}</p>}
 
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                    {/* ✅ Имя пользователя */}
-                    <div>
-                        <label className="block text-sm font-medium">Имя пользователя</label>
-                        <input {...register('username')} className="w-full border px-3 py-2 rounded" />
-                        <p className="text-red-500 text-sm">{errors.username?.message}</p>
-                    </div>
+                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                        {/* ✅ Имя пользователя */}
+                        <div>
+                            <label className="block text-sm font-medium">Имя пользователя</label>
+                            <input {...register('username')} className="w-full border px-3 py-2 rounded"/>
+                            <p className="text-red-500 text-sm">{errors.username?.message}</p>
+                        </div>
 
-                    {/* ✅ Email */}
-                    <div>
-                        <label className="block text-sm font-medium">Email</label>
-                        <input {...register('email')} type="email" className="w-full border px-3 py-2 rounded" />
-                        <p className="text-red-500 text-sm">{errors.email?.message}</p>
-                    </div>
+                        {/* ✅ Email */}
+                        <div>
+                            <label className="block text-sm font-medium">Email</label>
+                            <input {...register('email')} type="email" className="w-full border px-3 py-2 rounded"/>
+                            <p className="text-red-500 text-sm">{errors.email?.message}</p>
+                        </div>
 
-                    {/* ✅ Пароль */}
-                    <div>
-                        <label className="block text-sm font-medium">Пароль</label>
-                        <input {...register('password')} type="password" className="w-full border px-3 py-2 rounded" />
-                        <p className="text-red-500 text-sm">{errors.password?.message}</p>
-                    </div>
+                        {/* ✅ Пароль */}
+                        <div>
+                            <label className="block text-sm font-medium">Пароль</label>
+                            <input {...register('password')} type="password"
+                                   className="w-full border px-3 py-2 rounded"/>
+                            <p className="text-red-500 text-sm">{errors.password?.message}</p>
+                        </div>
 
-                    {/* ✅ Имя */}
-                    <div>
-                        <label className="block text-sm font-medium">Имя</label>
-                        <input {...register('first_name')} className="w-full border px-3 py-2 rounded" />
-                        <p className="text-red-500 text-sm">{errors.first_name?.message}</p>
-                    </div>
+                        {/* ✅ Имя */}
+                        <div>
+                            <label className="block text-sm font-medium">Имя</label>
+                            <input {...register('first_name')} className="w-full border px-3 py-2 rounded"/>
+                            <p className="text-red-500 text-sm">{errors.first_name?.message}</p>
+                        </div>
 
-                    {/* ✅ Фамилия */}
-                    <div>
-                        <label className="block text-sm font-medium">Фамилия</label>
-                        <input {...register('last_name')} className="w-full border px-3 py-2 rounded" />
-                        <p className="text-red-500 text-sm">{errors.last_name?.message}</p>
-                    </div>
+                        {/* ✅ Фамилия */}
+                        <div>
+                            <label className="block text-sm font-medium">Фамилия</label>
+                            <input {...register('last_name')} className="w-full border px-3 py-2 rounded"/>
+                            <p className="text-red-500 text-sm">{errors.last_name?.message}</p>
+                        </div>
 
-                    {/* ✅ Отчество */}
-                    <div>
-                        <label className="block text-sm font-medium">Отчество</label>
-                        <input {...register('surname')} className="w-full border px-3 py-2 rounded" />
-                        <p className="text-red-500 text-sm">{errors.surname?.message}</p>
-                    </div>
+                        {/* ✅ Отчество */}
+                        <div>
+                            <label className="block text-sm font-medium">Отчество</label>
+                            <input {...register('surname')} className="w-full border px-3 py-2 rounded"/>
+                            <p className="text-red-500 text-sm">{errors.surname?.message}</p>
+                        </div>
 
-                    {/* ✅ Номер телефона */}
-                    <div>
-                        <label className="block text-sm font-medium">Номер телефона</label>
-                        <input {...register('phone_number')} className="w-full border px-3 py-2 rounded" />
-                        <p className="text-red-500 text-sm">{errors.phone_number?.message}</p>
-                    </div>
+                        {/* ✅ Номер телефона */}
+                        <div>
+                            <label className="block text-sm font-medium">Номер телефона</label>
+                            <input {...register('phone_number')} className="w-full border px-3 py-2 rounded"/>
+                            <p className="text-red-500 text-sm">{errors.phone_number?.message}</p>
+                        </div>
 
-                    {/* ✅ Выбор роли */}
-                    <div>
-                        <label className="block text-sm font-medium">Роль</label>
-                        <select {...register('role')} className="w-full border px-3 py-2 rounded">
-                            <option value="">Выберите роль</option>
-                            <option value="employer">Работник склада</option>
-                            <option value="owner">Владелец склада</option>
-                        </select>
-                        <p className="text-red-500 text-sm">{errors.role?.message}</p>
-                    </div>
+                        {/* ✅ Выбор роли */}
+                        <div>
+                            <label className="block text-sm font-medium">Роль</label>
+                            <select {...register('role')} className="w-full border px-3 py-2 rounded">
+                                <option value="">Выберите роль</option>
+                                <option value="employer">Работник склада</option>
+                                <option value="owner">Владелец склада</option>
+                            </select>
+                            <p className="text-red-500 text-sm">{errors.role?.message}</p>
+                        </div>
 
-                    {/* ✅ Кнопка регистрации */}
-                    <button type="submit" className="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700" disabled={loading}>
-                        {loading ? 'Регистрация...' : 'Зарегистрироваться'}
-                    </button>
-                </form>
+                        {/* ✅ Кнопка регистрации */}
+                        <button type="submit"
+                                className="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700"
+                                disabled={loading}>
+                            {loading ? 'Регистрация...' : 'Зарегистрироваться'}
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
+
     );
 }

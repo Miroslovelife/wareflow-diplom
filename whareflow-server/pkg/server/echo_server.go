@@ -141,6 +141,12 @@ func (s *echoServer) InitGeneralRoutes(group *echo.Group, delivery *DeliveryLaye
 	userRouters.POST("/sign-in-phone", delivery.userHandlers.LoginByPhoneNumber)
 	userRouters.POST("/sign-in-email", delivery.userHandlers.LoginByEmail)
 	userRouters.GET("/refresh", delivery.userHandlers.Refresh)
+
+	profieRoutes := group.Group("/profile", delivery.authMiddleware.Auth)
+	profieRoutes.GET("", delivery.userHandlers.GetProfile)
+
+	logoutRoute := group.Group("/logout", delivery.authMiddleware.Auth)
+	logoutRoute.GET("", delivery.userHandlers.Logout)
 }
 
 func (s *echoServer) InitAdminRoutes(group *echo.Group, delivery *DeliveryLayer) {
@@ -233,13 +239,13 @@ func (s *echoServer) InitEmployerRoutes(group *echo.Group, delivery *DeliveryLay
 		delivery.permissionMiddleware.SetGroup("product"),
 		delivery.permissionMiddleware.HasPermissionOnWarehouse)
 	productZoneRouters.GET("/:product_id", delivery.productHandlers.GetProduct) // Получение информации о продукте
-    productZoneRouters.GET("", delivery.productHandlers.GetAllProductsFromZone)
+	productZoneRouters.GET("", delivery.productHandlers.GetAllProductsFromZone)
 	// Продукты на складе
 	productWarehouseRouters := warehouseRouters.Group("/:warehouse_id/product/:action",
 		delivery.permissionMiddleware.SetGroup("product"),
 		delivery.permissionMiddleware.HasPermissionOnWarehouse)
 	productWarehouseRouters.GET("", delivery.productHandlers.GetAllProductsFromWarehouse) // Получение всех продуктов на складе
 	productWarehouseRouters.PUT("/:product_id", delivery.productHandlers.UpdateProduct)   // Обновление продукта на складе
-	      // Создание нового продукта
+	// Создание нового продукта
 
 }

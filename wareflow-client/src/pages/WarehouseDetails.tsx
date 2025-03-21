@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { api } from '../utils/api';
 import { useAuth } from '../contexts/AuthProvider';
 import WarehouseStats from '../components/warehouse/WarehouseStats';
 import ZoneList from '../components/warehouse/ZoneList';
-import { Contact } from 'lucide-react';
+import { Contact, ArrowLeft } from 'lucide-react';
+
 
 
 interface Warehouse {
@@ -48,6 +49,7 @@ export default function WarehouseDetails() {
     const [showPermissions, setShowPermissions] = useState(false); // Управление видимостью разрешений на склад
     const [newZone, setNewZone] = useState({ name: '', capacity: 0 });
     const [showAddZonePopup, setShowAddZonePopup] = useState(false);
+    const navigate = useNavigate();
 
     const permissionTranslations: { [key: string]: string } = {
         "zone_manage": "Управление зонами",
@@ -177,10 +179,16 @@ export default function WarehouseDetails() {
     return (
         <div className="min-h-screen bg-gray-50 py-8">
             <div className="max-w-7xl mx-auto px-4">
+                <button
+                    onClick={() => navigate(-1)}
+                    className="mb-4 flex items-center text-indigo-600 hover:text-indigo-800"
+                >
+                    <ArrowLeft className="h-5 w-5 mr-2"/> Назад
+                </button>
                 {warehouse ? (
                     <>
                         <div className="flex justify-between items-center mb-4 border-b">
-                            <WarehouseStats warehouse={warehouse} />
+                            <WarehouseStats warehouse={warehouse}/>
                             {role === 'employer' && (
                                 <button
                                     onClick={() => setShowPermissions(!showPermissions)}
@@ -229,19 +237,23 @@ export default function WarehouseDetails() {
                                         type="text"
                                         placeholder="Название зоны"
                                         value={newZone.name}
-                                        onChange={(e) => setNewZone({ ...newZone, name: e.target.value })}
+                                        onChange={(e) => setNewZone({...newZone, name: e.target.value})}
                                         className="w-full p-2 border rounded mb-4"
                                     />
                                     <input
                                         type="number"
                                         placeholder="Вместимость"
                                         value={newZone.capacity}
-                                        onChange={(e) => setNewZone({ ...newZone, capacity: Number(e.target.value) })}
+                                        onChange={(e) => setNewZone({...newZone, capacity: Number(e.target.value)})}
                                         className="w-full p-2 border rounded mb-4"
                                     />
                                     <div className="flex justify-between">
-                                        <button onClick={addZone} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Добавить</button>
-                                        <button onClick={() => setShowAddZonePopup(false)} className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">Отмена</button>
+                                        <button onClick={addZone}
+                                                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Добавить
+                                        </button>
+                                        <button onClick={() => setShowAddZonePopup(false)}
+                                                className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">Отмена
+                                        </button>
                                     </div>
                                 </div>
                             </div>

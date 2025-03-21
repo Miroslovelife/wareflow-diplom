@@ -1,12 +1,14 @@
 import { Html5QrcodeScanner, Html5QrcodeScanType } from 'html5-qrcode';
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export const Scanner: React.FC = () => {
     const [scanResult, setScanResult] = useState<string | null>(null);
-    const scannerRef = useRef<Html5QrcodeScanner | null>(null); // Используем useRef для хранения сканера
+    const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+    const navigate = useNavigate(); // Хук для навигации в React Router
 
     useEffect(() => {
-        if (!scannerRef.current) { // Проверяем, не был ли сканер уже создан
+        if (!scannerRef.current) {
             scannerRef.current = new Html5QrcodeScanner(
                 'reader',
                 {
@@ -24,7 +26,11 @@ export const Scanner: React.FC = () => {
                     scannerRef.current?.clear();
 
                     if (isValidURL(decodedText)) {
-                        window.location.href = decodedText;
+                        const url = new URL(decodedText);
+                        const relativePath = url.pathname + url.search + url.hash;
+
+                        // Перенаправляем внутри React Router
+                        navigate(relativePath);
                     }
                 },
                 (errorMessage) => console.warn(errorMessage)
@@ -33,9 +39,9 @@ export const Scanner: React.FC = () => {
 
         return () => {
             scannerRef.current?.clear();
-            scannerRef.current = null; // Очищаем референс, чтобы избежать повторного создания
+            scannerRef.current = null;
         };
-    }, []);
+    }, [navigate]);
 
     const restartScan = () => {
         setScanResult(null);

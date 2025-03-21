@@ -64,7 +64,7 @@ export default function ProductManage() {
                 if (role === 'owner' || permissions.some(permission => permission.name === 'product_manage')) {
                     const warehouseResponse = await api.get(
                         role === 'employer'
-                            ? `/api/v1/${role}/${warehouseId}/product/product_manage`
+                            ? `/api/v1/${role}/warehouse/${warehouseId}/product/product_manage`
                             : `/api/v1/${role}/warehouse/${warehouseId}/product`
                     );
                     setProducts(warehouseResponse.data);

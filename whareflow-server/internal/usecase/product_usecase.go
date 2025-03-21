@@ -46,7 +46,7 @@ func (pu *IProductUsecase) CreateProduct(in *delivery.ProductModelRequest, userI
 		return err
 	}
 
-	qrData := fmt.Sprintf("%s%s", pu.cfg.QR.UrlFrontend, createdProduct.Uuid)
+	qrData := fmt.Sprintf("%s%d/%d/products/%s", pu.cfg.QR.UrlFrontend, warehouseId, zoneId, createdProduct.Uuid)
 
 	pathToFle, err := pu.qrGenerator.Generate(qrData, pu.cfg.QR.PathToFile, fmt.Sprintf("%s.png", string(createdProduct.Uuid)))
 	if err != nil {
@@ -71,7 +71,6 @@ func (pu *IProductUsecase) FindProduct(userId, productId string) (*delivery.Prod
 	}
 
 	fmt.Println(product)
-
 
 	productResponse := delivery.ProductModelResponse{
 		Uuid:        string(product.Uuid),

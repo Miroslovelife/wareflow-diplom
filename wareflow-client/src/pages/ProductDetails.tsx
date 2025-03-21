@@ -13,54 +13,64 @@ interface ProductDetail {
 }
 
 export default function ProductDetailPage() {
-  const { role, permissions, isAuthenticated, getPermissionsForWarehouse, username} = useAuth();
-  const { warehouseId } = useParams();
-  const { zoneId } = useParams();
-  const { productId } = useParams();  // Извлекаем ID товара из URL
+  const { role, permissions, isAuthenticated, getPermissionsForWarehouse, username } = useAuth();
+  const { warehouseId, zoneId, productId } = useParams();
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [permissionsLoaded, setPermissionsLoaded] = useState(false); // Флаг загрузки прав
 
   useEffect(() => {
     const fetchProductDetail = async () => {
-      if (!productId) {
-        setError('Ошибка: не указан ID товара');
+      if (!warehouseId || !zoneId || !productId || !role) {
+        console.error("Ошибка: один из параметров undefined!");
+        setError("Ошибка: недостающие параметры в URL");
         setIsLoading(false);
         return;
       }
 
       try {
-        if (role === 'employer' && permissions.length === 0) {
-          await getPermissionsForWarehouse(warehouseId, username);
-        }
+        setIsLoading(true);
 
-        if (role === 'owner' || permissions.some(permission => permission.name === 'product_manage')) {
-          const response = await api.get(
-              role === 'employer'
-                  ? `/api/v1/${role}/warehouse/${warehouseId}/zone/${zoneId}/product/product_manage/${productId}`
-                  : `/api/v1/${role}/warehouse/${warehouseId}/zone/${zoneId}/product/${productId}`
-          );
-          setProduct(response.data);
-        }
-        }catch (err) {
-          setError('Ошибка загрузки данных о товаре');
-          console.error(err);
-        } finally {
-          setIsLoading(false);
-        }
+        const url =
+            role === "employer"
+                ? `/api/v1/${role}/warehouse/${warehouseId}/zone/${zoneId}/product/product_manage/${productId}`
+                : `/api/v1/${role}/warehouse/${warehouseId}/zone/${zoneId}/product/${productId}`;
 
+        console.log("Отправляем запрос:", url);
+        const response = await api.get(url);
+        console.log("Ответ от API:", response.data);
 
+        setProduct(response.data);
+      } catch (err) {
+        setError("Ошибка загрузки данных о товаре");
+        console.error("Ошибка запроса:", err);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    fetchProductDetail();
-  }, [productId]);
+    // Если роль - employer и права еще не загружены, загружаем их
+    if (role === "employer" && !permissionsLoaded && username) {
+      getPermissionsForWarehouse(warehouseId!, username).then(() => {
+        setPermissionsLoaded(true);
+      });
+    }
+
+    // Вызываем `fetchProductDetail`, только если:
+    // - роль загружена
+    // - либо это `owner`, либо у `employer` загружены права
+    if (role && (role === "owner" || permissionsLoaded)) {
+      fetchProductDetail();
+    }
+  }, [warehouseId, zoneId, productId, role, permissionsLoaded, username]); // Используем permissionsLoaded вместо permissions.length
 
   if (isLoading) return <div className="text-center py-6">Загрузка...</div>;
   if (error) return <div className="text-center py-6 text-red-600">{error}</div>;
 
   // Извлекаем имя файла без префикса './qr_storage/'
   const imageFileName = product?.qr_path ? product.qr_path.replace('./qr_storage/', '') : '';
-  const imagePath = imageFileName ? `http://localhost:8089/qr_storage/${imageFileName}` : '';
+  const imagePath = imageFileName ? `https://bebradomen.twc1.net:8443/qr_storage/${imageFileName}` : '';
 
   return (
       <div className="min-h-screen bg-gray-50 py-8">

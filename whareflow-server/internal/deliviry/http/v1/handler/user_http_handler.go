@@ -18,6 +18,8 @@ type UserHandler interface {
 	LoginByPhoneNumber(echo.Context) error
 	LoginByEmail(echo.Context) error
 	Refresh(echo.Context) error
+	GetProfile(echo.Context) error
+	Logout(c echo.Context) error
 }
 
 type IUserHttpHandler struct {
@@ -55,7 +57,7 @@ func (h *IUserHttpHandler) Register(c echo.Context) error {
 		})
 	}
 
-    fmt.Println(reqBody.Role)
+	fmt.Println(reqBody.Role)
 
 	if reqBody.Role != "owner" && reqBody.Role != "employer" {
 		return c.JSON(http.StatusBadRequest, map[string]string{
@@ -119,7 +121,8 @@ func (h *IUserHttpHandler) LoginByPhoneNumber(c echo.Context) error {
 		HttpOnly: true,
 		Secure:   false,
 		SameSite: http.SameSiteLaxMode,
-		MaxAge:   h.cfg.Auth.ExpRefreshToken,
+		MaxAge:   h.cfg.Auth.ExpRefreshToken * 60,
+		Expires:  time.Now().Add(time.Duration(h.cfg.Auth.ExpRefreshToken) * 60),
 	}
 
 	c.SetCookie(&refreshCookie)
@@ -163,8 +166,8 @@ func (h *IUserHttpHandler) LoginByEmail(c echo.Context) error {
 		HttpOnly: true,
 		Secure:   false,
 		SameSite: http.SameSiteLaxMode,
-		MaxAge:   h.cfg.Auth.ExpRefreshToken,
-		Expires:  time.Now().Add(time.Duration(h.cfg.Auth.ExpRefreshToken) * time.Second),
+		MaxAge:   h.cfg.Auth.ExpRefreshToken * 60,
+		Expires:  time.Now().Add(time.Duration(h.cfg.Auth.ExpRefreshToken) * 60),
 	}
 
 	c.SetCookie(&refreshCookie)
@@ -218,7 +221,8 @@ func (h *IUserHttpHandler) Refresh(c echo.Context) error {
 		HttpOnly: true,
 		Secure:   false,
 		SameSite: http.SameSiteLaxMode,
-		MaxAge:   h.cfg.Auth.ExpRefreshToken,
+		MaxAge:   h.cfg.Auth.ExpRefreshToken * 60,
+		Expires:  time.Now().Add(time.Duration(h.cfg.Auth.ExpRefreshToken) * 60),
 	}
 
 	c.SetCookie(&refreshCookie)
@@ -226,4 +230,31 @@ func (h *IUserHttpHandler) Refresh(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{
 		"accessToken": newAccessToken,
 	})
+}
+
+func (h *IUserHttpHandler) GetProfile(c echo.Context) error {
+	userId := c.Get("x-user-id").(string)
+
+	profile, err := h.userUseCase.GetProfile(userId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, "Can't get profile")
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"profile": profile,
+	})
+}
+
+func (h *IUserHttpHandler) Logout(c echo.Context) error {
+	c.SetCookie(&http.Cookie{
+		Name:     "refresh-token",
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+		MaxAge:   -1,
+	})
+
+	return c.JSON(http.StatusOK, map[string]string{"message": "Logout successful"})
 }

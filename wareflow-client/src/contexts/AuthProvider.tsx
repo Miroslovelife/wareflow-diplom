@@ -50,12 +50,13 @@ const isTokenExpired = (token: string | null): boolean => {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [role, setRole] = useState<'admin' | 'owner' | 'employer' | null>(null);
     const [username, setUsername] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [permissions, setPermissions] = useState<string[]>([]);
     const [systemPermissions, setSystemPermissions] = useState<string[]>([]);
+    const [permissionsLoaded, setPermissionsLoaded] = useState(false); // Флаг загрузки прав
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -96,16 +97,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, []);
 
     const getPermissionsForWarehouse = async (warehouseId: string, username: string) => {
-        if (role !== 'employer') return; // Admin не должен делать этот запрос
+        if (role !== 'employer' || permissionsLoaded) return; // Запрос только если ещё не загружено
 
         try {
-            const response = await api.post(
-                `/api/v1/${role}/permission/${warehouseId}/get_my_permissions`,
-                { username } // Тело запроса
-            );
+            const response = await api.post(`/api/v1/employer/permission/${warehouseId}/get_my_permissions`, { username });
 
             setPermissions(response.data.permissions || []);
-
+            setPermissionsLoaded(true); // Устанавливаем, что права загружены
         } catch (error) {
             console.error('Ошибка получения прав на склад:', error);
         }
@@ -113,10 +111,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const getSystemPermissions = async () => {
         try {
-            const response = await api.get(
-                `/api/v1/${role}/permission`,
-            );
-
+            const response = await api.get(`/api/v1/${role}/permission`);
             setSystemPermissions(response.data || []);
         } catch (error) {
             console.error('Ошибка получения прав', error);
@@ -133,6 +128,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setIsAuthenticated(true);
                 setRole(decoded?.role as 'admin' | 'owner' | 'employer' | null);
                 setUsername(decoded?.username || null);
+                setPermissionsLoaded(false); // Сбрасываем флаг загрузки прав при новом входе
             }
         } catch (error) {
             console.error('Ошибка входа по email:', error);
@@ -150,6 +146,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setIsAuthenticated(true);
                 setRole(decoded?.role as 'admin' | 'owner' | 'employer' | null);
                 setUsername(decoded?.username || null);
+                setPermissionsLoaded(false); // Сбрасываем флаг загрузки прав при новом входе
             }
         } catch (error) {
             console.error('Ошибка входа по телефону:', error);
@@ -159,7 +156,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const logout = async () => {
         try {
-            await api.post('/api/v1/auth/logout', {}, { withCredentials: true });
+            await api.get('/api/v1/logout', { withCredentials: true });
         } catch (error) {
             console.error('Ошибка при выходе:', error);
         }
@@ -168,10 +165,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setRole(null);
         setUsername(null);
         setPermissions([]);
+        setPermissionsLoaded(false); // Сбрасываем флаг загрузки прав
     };
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, role, username, isLoading, permissions, loginWithEmail, loginWithPhone, logout, getPermissionsForWarehouse, getSystemPermissions }}>
+        <AuthContext.Provider value={{ isAuthenticated, role, username, isLoading, permissions, systemPermissions, loginWithEmail, loginWithPhone, logout, getPermissionsForWarehouse, getSystemPermissions }}>
             {!isLoading && children}
         </AuthContext.Provider>
     );

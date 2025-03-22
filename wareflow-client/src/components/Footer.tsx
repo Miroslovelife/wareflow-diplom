@@ -20,7 +20,7 @@ export default function Footer() {
                             rel="noopener noreferrer"
                         >
                             <img
-                                src="../../static/wareflow.png" // Генерация QR-кода
+                                src="/wareflow.png" // Генерация QR-кода
                                 alt="Telegram QR Code"
                                 className="mx-auto"
                                 width="150"

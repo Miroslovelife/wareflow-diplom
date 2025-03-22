@@ -13,7 +13,6 @@ export const Home: React.FC = () => {
       document.body.removeChild(script);
     };
   }, []);
-
   return (
       <div className="min-h-screen bg-gray-50 relative">
         {/* Canvas для particles.js */}
